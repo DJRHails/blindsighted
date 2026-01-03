@@ -30,11 +30,6 @@ def get_elevenlabs_client() -> ElevenLabsClient:
     return ElevenLabsClient()
 
 
-# Annotated types for dependency injection
-OpenRouterDep = Annotated[OpenRouterClient, Depends(get_openrouter_client)]
-ElevenLabsDep = Annotated[ElevenLabsClient, Depends(get_elevenlabs_client)]
-
-
 class FrameRequest(BaseModel):
     """Request model for frame processing"""
 
@@ -59,8 +54,8 @@ async def root() -> dict[str, str]:
 @app.post("/process-frame", response_model=FrameResponse)
 async def process_frame(
     request: FrameRequest,
-    openrouter_client: OpenRouterDep,
-    elevenlabs_client: ElevenLabsDep,
+    openrouter_client: Annotated[OpenRouterClient, Depends(get_openrouter_client)],
+    elevenlabs_client: Annotated[ElevenLabsClient, Depends(get_elevenlabs_client)],
 ) -> FrameResponse:
     """
     Process a video frame and generate an audio description
