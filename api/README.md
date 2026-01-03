@@ -1,8 +1,17 @@
 # Blindsighted API
 
-FastAPI backend for the Blindsighted app.
+FastAPI backend for the Blindsighted app with AI-powered visual assistance.
+
+## Features
+
+- **Frame Processing**: Receives video frames from Meta AI Glasses
+- **AI Vision**: Uses Gemini (via OpenRouter) to describe scenes
+- **Text-to-Speech**: Converts descriptions to audio for blind/visually impaired users
+- **Real-time Streaming**: Processes frames at configurable FPS
 
 ## Setup
+
+### 1. Install Dependencies
 
 Install dependencies using uv:
 ```bash
@@ -13,6 +22,20 @@ Or install just the production dependencies:
 ```bash
 uv pip install -e .
 ```
+
+### 2. Configure Environment
+
+Copy the example environment file:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your OpenRouter API key:
+```bash
+OPENROUTER_API_KEY=your_api_key_here
+```
+
+Get an API key from [OpenRouter](https://openrouter.ai/)
 
 ## Development
 
