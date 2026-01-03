@@ -12,6 +12,7 @@
         "expo-meta-wearables",
         {
           "appId": "856891110384461",
+          "urlScheme": "blindsighted://",
           "analyticsOptOut": false
         }
       ]
