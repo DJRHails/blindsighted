@@ -1,0 +1,31 @@
+# OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# App (Expo/React Native)
+app/node_modules/
+app/.expo/
+app/dist/
+app/npm-debug.*
+app/yarn-debug.*
+app/yarn-error.*
+app/.env.local
+app/.env.*.local
+
+# API (Python/FastAPI)
+api/__pycache__/
+api/*.py[cod]
+api/*$py.class
+api/.venv/
+api/venv/
+api/.env
+api/.env.local
+api/*.egg-info/
+
+# uv
+.uv/
