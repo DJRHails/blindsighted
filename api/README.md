@@ -52,10 +52,43 @@ mypy .
 
 ## Running the API
 
+Start the development server:
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at:
+- **API**: `http://localhost:8000`
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
 
-API documentation available at `http://localhost:8000/docs`
+## API Endpoints
+
+### `POST /process-frame`
+
+Process a video frame and generate an audio description.
+
+**Request:**
+```json
+{
+  "image": "base64_encoded_image_string",
+  "timestamp": 1704300000000
+}
+```
+
+**Response:**
+```json
+{
+  "description": "You are looking at a street scene with cars and pedestrians...",
+  "timestamp": 1704300000000,
+  "processing_time_ms": 1234.5
+}
+```
+
+## How It Works
+
+1. **App captures frame**: Meta AI Glasses capture a photo every 2 seconds (configurable)
+2. **Frame sent to API**: Base64 encoded image sent to `/process-frame`
+3. **Gemini vision analysis**: OpenRouter routes request to Gemini 2.0 Flash for image description
+4. **Audio generation**: Description converted to speech using pyttsx3
+5. **Real-time playback**: Audio played immediately to assist the user
