@@ -1,10 +1,10 @@
 import base64
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import settings
-from clients.openrouter import openrouter_client
-from clients.elevenlabs import elevenlabs_client
+from clients.openrouter import OpenRouterClient
+from clients.elevenlabs import ElevenLabsClient
 
 app = FastAPI(title="Blindsighted API")
 
@@ -16,6 +16,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Dependency injection for clients
+def get_openrouter_client() -> OpenRouterClient:
+    """Dependency that provides an OpenRouter client instance"""
+    return OpenRouterClient()
+
+
+def get_elevenlabs_client() -> ElevenLabsClient:
+    """Dependency that provides an ElevenLabs client instance"""
+    return ElevenLabsClient()
 
 
 class FrameRequest(BaseModel):
@@ -40,12 +51,18 @@ async def root() -> dict[str, str]:
 
 
 @app.post("/process-frame", response_model=FrameResponse)
-async def process_frame(request: FrameRequest) -> FrameResponse:
+async def process_frame(
+    request: FrameRequest,
+    openrouter_client: OpenRouterClient = Depends(get_openrouter_client),
+    elevenlabs_client: ElevenLabsClient = Depends(get_elevenlabs_client),
+) -> FrameResponse:
     """
     Process a video frame and generate an audio description
 
     Args:
         request: Frame data with base64 encoded image
+        openrouter_client: OpenRouter client (injected)
+        elevenlabs_client: ElevenLabs client (injected)
 
     Returns:
         Description and processing metadata

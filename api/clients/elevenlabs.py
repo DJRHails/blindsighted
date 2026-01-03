@@ -207,6 +207,3 @@ class ElevenLabsClient:
             output_format=output_format,
         )
         return io.BytesIO(audio_data)
-
-
-elevenlabs_client = ElevenLabsClient()

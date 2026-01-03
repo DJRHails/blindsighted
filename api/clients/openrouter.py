@@ -68,6 +68,3 @@ class OpenRouterClient:
                 return data["choices"][0]["message"]["content"]
 
             raise ValueError("No response from OpenRouter")
-
-
-openrouter_client = OpenRouterClient()
