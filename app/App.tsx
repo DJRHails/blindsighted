@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import * as MetaWearables from 'expo-meta-wearables';
 import { videoStreamService } from './src/services/videoStream';
 import { META_APP_ID, STREAM_INTERVAL_MS, STREAM_IMAGE_QUALITY, STREAMED_FPS } from './src/config/constants';
+import { useDebounce } from './src/hooks';
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
@@ -13,6 +14,9 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [lastDescription, setLastDescription] = useState<string>('');
   const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce the description to prevent rapid UI updates
+  const debouncedDescription = useDebounce(lastDescription, 300);
 
   useEffect(() => {
     initializeSDK();
@@ -175,10 +179,10 @@ export default function App() {
             {isStreaming ? `Active (${STREAMED_FPS} FPS)` : 'Inactive'}
           </Text>
 
-          {lastDescription && (
+          {debouncedDescription && (
             <>
               <Text style={styles.statusLabel}>Last Description:</Text>
-              <Text style={styles.statusValue}>{lastDescription}</Text>
+              <Text style={styles.statusValue}>{debouncedDescription}</Text>
             </>
           )}
         </View>
