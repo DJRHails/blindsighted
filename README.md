@@ -51,3 +51,13 @@ The API will be available at `http://localhost:8000` with documentation at `http
 ## Development
 
 See individual README files in `app/` and `api/` directories for more details.
+
+## Build + Deploy
+
+eas login -> enter email + pword
+# ios build
+eas build --platform ios
+# android build
+eas build --profile development --platform android
+
+
