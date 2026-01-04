@@ -1,7 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, Alert, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Button, Alert, ScrollView, Modal, Pressable } from 'react-native';
 import { useEffect, useState, useRef } from 'react';
 import * as MetaWearables from 'expo-meta-wearables';
+import { MockDeviceKitInfo } from 'expo-meta-wearables';
 import { videoStreamService } from './src/services/videoStream';
 import { META_APP_ID, STREAM_INTERVAL_MS, STREAM_IMAGE_QUALITY, STREAMED_FPS } from './src/config/constants';
 import { useDebounce } from './src/hooks';
@@ -13,6 +14,7 @@ export default function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [lastDescription, setLastDescription] = useState<string>('');
+  const [showMockDeviceKit, setShowMockDeviceKit] = useState(false);
   const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounce the description to prevent rapid UI updates
@@ -224,7 +226,35 @@ export default function App() {
           Note: This demo uses the expo-meta-wearables package.
           {'\n'}Use a debug build with Mock Device Kit for testing without hardware.
         </Text>
+
+        <View style={styles.spacer} />
+
+        <Button
+          title="📱 Mock Device Kit Info"
+          onPress={() => setShowMockDeviceKit(true)}
+          color="#9C27B0"
+        />
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={showMockDeviceKit}
+        onRequestClose={() => setShowMockDeviceKit(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Mock Device Kit</Text>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setShowMockDeviceKit(false)}
+            >
+              <Text style={styles.closeButtonText}>✕ Close</Text>
+            </Pressable>
+          </View>
+          <MockDeviceKitInfo />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -299,5 +329,37 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 60,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: '#2196F3',
+    fontWeight: '600',
   },
 });
