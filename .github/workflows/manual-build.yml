@@ -44,13 +44,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
-
-      - name: Setup expo-meta-wearables
-        run: |
-          git clone https://github.com/DJRHails/expo-meta-wearables.git ../expo-meta-wearables
-          cd ../expo-meta-wearables
-          npm install
+        run: yarn install --frozen-lockfile
 
       - name: Build
         working-directory: ./app

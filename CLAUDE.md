@@ -164,7 +164,7 @@ git push origin v1.2.3
 
 - **App**: Uses `yarn` (has `yarn.lock`)
 - **API**: Uses `uv` for Python dependency management
-- **CI**: App CI uses `npm ci` (not yarn) - this works because package-lock.json is committed
+- **CI**: App CI uses `yarn install --frozen-lockfile` for reproducible builds
 
 ## Python Code Style
 

@@ -34,7 +34,7 @@ jobs:
 
       - name: Install app dependencies
         working-directory: ./app
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build iOS Development
         working-directory: ./app
@@ -77,7 +77,7 @@ jobs:
 
       - name: Install app dependencies
         working-directory: ./app
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build Android Development
         working-directory: ./app
