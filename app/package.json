@@ -9,7 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "expo": "~54.0.30",
+    "expo": "~54.0.31",
     "expo-av": "^16.0.8",
     "expo-dev-client": "~6.0.20",
     "expo-file-system": "^19.0.21",
@@ -22,6 +22,9 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
+  },
+  "resolutions": {
+    "expo-modules-core": "3.0.29"
   },
   "private": true
 }
