@@ -33,6 +33,8 @@ jobs:
     name: Build iOS App
     needs: extract-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,6 +85,8 @@ jobs:
     name: Build Android App
     needs: extract-version
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

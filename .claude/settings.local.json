@@ -1,8 +1,13 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(npm version:*)",
-      "Bash(git -C /Users/dh/Projects/github.com/DJRHails/blindsighted/app log --oneline -20)"
-    ]
-  }
+    "permissions": {
+        "allow": [
+            "Bash(npm version:*)",
+            "mcp__playwriter__execute",
+            "Bash(git add:*)",
+            "Bash(git commit:*)",
+            "Bash(gh secret:*)",
+            "Bash(gh run rerun:*)",
+            "Bash(gh workflow run:*)"
+        ]
+    }
 }
