@@ -1,5 +1,3 @@
-
-
 //
 // NonStreamView.swift
 //

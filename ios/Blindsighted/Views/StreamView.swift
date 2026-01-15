@@ -1,5 +1,3 @@
-
-
 //
 // StreamView.swift
 //
@@ -44,15 +42,6 @@ struct StreamView: View {
         ControlsView(viewModel: viewModel)
       }
       .padding(.all, 24)
-      // Timer display area with fixed height
-      VStack {
-        Spacer()
-        if viewModel.activeTimeLimit.isTimeLimited && viewModel.remainingTime > 0 {
-          Text("Streaming ending in \(viewModel.remainingTime.formattedCountdown)")
-            .font(.system(size: 15))
-            .foregroundColor(.white)
-        }
-      }
     }
     .onDisappear {
       Task {
@@ -73,9 +62,7 @@ struct StreamView: View {
       }
     }
   }
-}
-
-// Extracted controls for clarity
+}// Extracted controls for clarity
 struct ControlsView: View {
   @ObservedObject var viewModel: StreamSessionViewModel
   var body: some View {
@@ -120,15 +107,6 @@ struct ControlsView: View {
           } else {
             viewModel.startRecording()
           }
-        }
-
-        // Timer button
-        CircleButton(
-          icon: "timer",
-          text: viewModel.activeTimeLimit != .noLimit ? viewModel.activeTimeLimit.displayText : nil
-        ) {
-          let nextTimeLimit = viewModel.activeTimeLimit.next
-          viewModel.setTimeLimit(nextTimeLimit)
         }
 
         // Photo button

@@ -1,5 +1,3 @@
-
-
 //
 // RegistrationView.swift
 //

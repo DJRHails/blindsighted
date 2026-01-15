@@ -1,5 +1,3 @@
-
-
 //
 // MainAppView.swift
 //

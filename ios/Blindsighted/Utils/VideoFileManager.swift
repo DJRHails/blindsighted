@@ -9,6 +9,8 @@ import Foundation
 import AVFoundation
 import UIKit
 
+let VIDEOS_DIRECTORY = "BlindsightedLifelog"
+
 struct RecordedVideo: Identifiable, Codable {
   let id: UUID
   let filename: String
@@ -28,7 +30,7 @@ class VideoFileManager {
 
   private init() {
     let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-    self.videosDirectory = documentsPath.appendingPathComponent("RecordedVideos", isDirectory: true)
+    self.videosDirectory = documentsPath.appendingPathComponent(VIDEOS_DIRECTORY, isDirectory: true)
 
     // Create videos directory if it doesn't exist
     try? FileManager.default.createDirectory(

@@ -1,5 +1,3 @@
-
-
 //
 // StatusText.swift
 //

@@ -1,5 +1,3 @@
-
-
 //
 // DebugMenuView.swift
 //

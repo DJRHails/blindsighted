@@ -1,5 +1,3 @@
-
-
 //
 // MediaPickerView.swift
 //

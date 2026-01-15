@@ -1,5 +1,3 @@
-
-
 //
 // StreamSessionView.swift
 //

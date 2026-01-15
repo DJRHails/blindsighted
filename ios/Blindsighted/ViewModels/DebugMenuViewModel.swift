@@ -1,5 +1,3 @@
-
-
 //
 // DebugMenuViewModel.swift
 //

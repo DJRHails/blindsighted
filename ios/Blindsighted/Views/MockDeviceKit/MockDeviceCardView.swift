@@ -1,5 +1,3 @@
-
-
 //
 // MockDeviceCardView.swift
 //
@@ -114,8 +112,6 @@ struct MockDeviceCardView: View {
       .padding()
     }
   }
-}
-
-// Replace this with PhotosPicker once we're on iOS 16 or newer
+}// Replace this with PhotosPicker once we're on iOS 16 or newer
 
 #endif

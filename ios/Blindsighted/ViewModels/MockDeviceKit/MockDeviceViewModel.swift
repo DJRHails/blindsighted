@@ -1,5 +1,3 @@
-
-
 //
 // MockDeviceViewModel.swift
 //

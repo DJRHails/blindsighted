@@ -29,10 +29,6 @@ class StreamSessionViewModel: ObservableObject {
     streamingStatus != .stopped
   }
 
-  // Timer properties
-  @Published var activeTimeLimit: StreamTimeLimit = .noLimit
-  @Published var remainingTime: TimeInterval = 0
-
   // Photo capture properties
   @Published var capturedPhoto: UIImage?
   @Published var showPhotoPreview: Bool = false
@@ -43,7 +39,6 @@ class StreamSessionViewModel: ObservableObject {
   private var videoRecorder: VideoRecorder?
   private var recordingURL: URL?
 
-  private var timerTask: Task<Void, Never>?
   // The core DAT SDK StreamSession - handles all streaming operations
   private var streamSession: StreamSession
   // Listener tokens are used to manage DAT SDK event subscriptions
@@ -152,11 +147,6 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func startSession() async {
-    // Reset to unlimited time when starting a new stream
-    activeTimeLimit = .noLimit
-    remainingTime = 0
-    stopTimer()
-
     await streamSession.start()
   }
 
@@ -166,7 +156,6 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func stopSession() async {
-    stopTimer()
     if isRecording {
       await stopRecording()
     }
@@ -176,17 +165,6 @@ class StreamSessionViewModel: ObservableObject {
   func dismissError() {
     showError = false
     errorMessage = ""
-  }
-
-  func setTimeLimit(_ limit: StreamTimeLimit) {
-    activeTimeLimit = limit
-    remainingTime = limit.durationInSeconds ?? 0
-
-    if limit.isTimeLimited {
-      startTimer()
-    } else {
-      stopTimer()
-    }
   }
 
   func capturePhoto() {
@@ -236,25 +214,6 @@ class StreamSessionViewModel: ObservableObject {
     videoRecorder = nil
     recordingURL = nil
     recordingDuration = 0
-  }
-
-  private func startTimer() {
-    stopTimer()
-    timerTask = Task { @MainActor [weak self] in
-      while let self, remainingTime > 0 {
-        try? await Task.sleep(nanoseconds: NSEC_PER_SEC)
-        guard !Task.isCancelled else { break }
-        remainingTime -= 1
-      }
-      if let self, !Task.isCancelled {
-        await stopSession()
-      }
-    }
-  }
-
-  private func stopTimer() {
-    timerTask?.cancel()
-    timerTask = nil
   }
 
   private func updateStatusFromState(_ state: StreamSessionState) {
