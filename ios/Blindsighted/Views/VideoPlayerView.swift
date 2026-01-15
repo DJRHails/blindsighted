@@ -101,7 +101,7 @@ struct VideoPlayerView: View {
       setupPlayer()
     }
     .sheet(isPresented: $showShareSheet) {
-      ShareSheet(video: video)
+      VideoShareSheet(video: video)
     }
   }
 
@@ -122,7 +122,7 @@ struct VideoPlayerView: View {
   }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
+struct VideoShareSheet: UIViewControllerRepresentable {
   let video: RecordedVideo
 
   func makeUIViewController(context: Context) -> UIActivityViewController {

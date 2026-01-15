@@ -42,7 +42,7 @@ struct PhotoPreviewView: View {
         dismissWithAnimation()
       }
     ) {
-      ShareSheet(photo: photo)
+      PhotoShareSheet(photo: photo)
     }
   }
 
@@ -83,7 +83,7 @@ struct PhotoPreviewView: View {
   }
 }
 
-struct ShareSheet: UIViewControllerRepresentable {
+struct PhotoShareSheet: UIViewControllerRepresentable {
   let photo: UIImage
 
   func makeUIViewController(context: Context) -> UIActivityViewController {
