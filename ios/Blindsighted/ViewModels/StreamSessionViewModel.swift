@@ -1,11 +1,3 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * This source code is licensed under the license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 //
 // StreamSessionViewModel.swift
 //
@@ -44,6 +36,12 @@ class StreamSessionViewModel: ObservableObject {
   // Photo capture properties
   @Published var capturedPhoto: UIImage?
   @Published var showPhotoPreview: Bool = false
+
+  // Video recording properties
+  @Published var isRecording: Bool = false
+  @Published var recordingDuration: TimeInterval = 0
+  private var videoRecorder: VideoRecorder?
+  private var recordingURL: URL?
 
   private var timerTask: Task<Void, Never>?
   // The core DAT SDK StreamSession - handles all streaming operations
@@ -92,6 +90,16 @@ class StreamSessionViewModel: ObservableObject {
           self.currentVideoFrame = image
           if !self.hasReceivedFirstFrame {
             self.hasReceivedFirstFrame = true
+          }
+        }
+
+        // Record frame if recording is active
+        if self.isRecording, let recorder = self.videoRecorder {
+          do {
+            try recorder.appendFrame(videoFrame)
+            self.recordingDuration = recorder.recordingDuration
+          } catch {
+            NSLog("[Blindsighted] Failed to append video frame: \(error)")
           }
         }
       }
@@ -159,6 +167,9 @@ class StreamSessionViewModel: ObservableObject {
 
   func stopSession() async {
     stopTimer()
+    if isRecording {
+      await stopRecording()
+    }
     await streamSession.stop()
   }
 
@@ -185,6 +196,46 @@ class StreamSessionViewModel: ObservableObject {
   func dismissPhotoPreview() {
     showPhotoPreview = false
     capturedPhoto = nil
+  }
+
+  func startRecording() {
+    guard isStreaming && !isRecording else { return }
+
+    do {
+      let url = VideoFileManager.shared.generateVideoURL()
+      let recorder = VideoRecorder(outputURL: url, videoSize: CGSize(width: 1280, height: 720), frameRate: 24)
+      try recorder.startRecording()
+
+      self.videoRecorder = recorder
+      self.recordingURL = url
+      self.isRecording = true
+      self.recordingDuration = 0
+
+      NSLog("[Blindsighted] Started recording to: \(url.path)")
+    } catch {
+      showError("Failed to start recording: \(error.localizedDescription)")
+    }
+  }
+
+  func stopRecording() async {
+    guard isRecording, let recorder = videoRecorder else { return }
+
+    isRecording = false
+
+    do {
+      let savedURL = try await recorder.stopRecording()
+      NSLog("[Blindsighted] Video saved to: \(savedURL.path)")
+
+      // Show success message
+      showError = false
+      errorMessage = "Video saved successfully"
+    } catch {
+      showError("Failed to save recording: \(error.localizedDescription)")
+    }
+
+    videoRecorder = nil
+    recordingURL = nil
+    recordingDuration = 0
   }
 
   private func startTimer() {

@@ -1,18 +1,7 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * This source code is licensed under the license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 //
 // BlindsightedApp.swift
 //
-// Main entry point for the Blindsighted sample app demonstrating the Meta Wearables DAT SDK.
-// This app shows how to connect to wearable devices (like Ray-Ban Meta smart glasses),
-// stream live video from their cameras, and capture photos. It provides a complete example
-// of DAT SDK integration including device registration, permissions, and media streaming.
+// Main entry point for the Blindsighted app
 //
 
 import Foundation

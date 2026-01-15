@@ -1,14 +1,19 @@
-# Camera Access App
+# Blindsighted iOS App
 
-A sample iOS application demonstrating integration with Meta Wearables Device Access Toolkit. This app showcases streaming video from Meta AI glasses, capturing photos, and managing connection states.
+A native iOS application providing AI-powered visual assistance for blind/visually impaired users using Ray-Ban Meta smart glasses. This app uses the Meta Wearables Device Access Toolkit to stream live video, record sessions, and capture photos from the glasses.
+
+## Attribution
+
+This app is based on the [CameraAccess sample](https://github.com/facebook/meta-wearables-dat-ios/tree/main/samples/CameraAccess) from Meta's [meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios) repository. The sample code has been customized and extended for the Blindsighted project.
 
 ## Features
 
-- Connect to Meta AI glasses
-- Stream camera feed from the device
-- Capture photos from glasses
-- Timer-based streaming sessions
-- Share captured photos
+- **Live Video Streaming**: Real-time camera feed from Ray-Ban Meta glasses
+- **Video Recording**: Record and save video sessions to device storage
+- **Photo Capture**: Capture still photos from the video stream
+- **Video Gallery**: Browse, playback, and manage recorded videos with thumbnails
+- **Timer-based Sessions**: Set automatic stream duration limits
+- **Share & Export**: Share photos and videos via iOS share sheet
 
 ## Prerequisites
 
@@ -34,11 +39,24 @@ A sample iOS application demonstrating integration with Meta Wearables Device Ac
 1. Launch the app.
 1. Press the "Connect" button to complete app registration.
 1. Once connected, the camera stream from the device will be displayed
-1. Use the on-screen controls to:
-   - Set stream time limits
-   - Capture photos
-   - View and save captured photos
-   - Disconnect from the device
+
+### Stream Tab Controls
+
+- **Record Button** (circle icon): Start/stop video recording
+- **Timer Button**: Set automatic stream duration limits
+- **Camera Button**: Capture still photos
+- **Stop Streaming**: End the streaming session
+
+### Gallery Tab
+
+- Browse all recorded videos with thumbnails
+- Tap a video to play it full-screen
+- Long-press or swipe left to delete videos
+- Share videos via the share button in the player
+
+## Video Storage
+
+Recorded videos are saved to the app's Documents directory under `RecordedVideos/` and persist until manually deleted. Videos are stored in MP4 format with H.264 encoding.
 
 ## Troubleshooting
 

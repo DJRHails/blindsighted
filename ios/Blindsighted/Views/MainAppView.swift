@@ -1,10 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * This source code is licensed under the license found in the
- * LICENSE file in the root directory of this source tree.
- */
+
 
 //
 // MainAppView.swift
@@ -20,6 +14,7 @@ import SwiftUI
 struct MainAppView: View {
   let wearables: WearablesInterface
   @ObservedObject private var viewModel: WearablesViewModel
+  @State private var selectedTab: Int = 0
 
   init(wearables: WearablesInterface, viewModel: WearablesViewModel) {
     self.wearables = wearables
@@ -28,7 +23,19 @@ struct MainAppView: View {
 
   var body: some View {
     if viewModel.registrationState == .registered || viewModel.hasMockDevice {
-      StreamSessionView(wearables: wearables, wearablesVM: viewModel)
+      TabView(selection: $selectedTab) {
+        StreamSessionView(wearables: wearables, wearablesVM: viewModel)
+          .tabItem {
+            Label("Stream", systemImage: "video")
+          }
+          .tag(0)
+
+        VideoGalleryView()
+          .tabItem {
+            Label("Gallery", systemImage: "square.grid.2x2")
+          }
+          .tag(1)
+      }
     } else {
       // User not registered - show registration/onboarding flow
       HomeScreenView(viewModel: viewModel)

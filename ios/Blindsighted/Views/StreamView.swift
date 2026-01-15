@@ -1,10 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- * All rights reserved.
- *
- * This source code is licensed under the license found in the
- * LICENSE file in the root directory of this source tree.
- */
+
 
 //
 // StreamView.swift
@@ -85,30 +79,62 @@ struct StreamView: View {
 struct ControlsView: View {
   @ObservedObject var viewModel: StreamSessionViewModel
   var body: some View {
-    // Controls row
-    HStack(spacing: 8) {
-      CustomButton(
-        title: "Stop streaming",
-        style: .destructive,
-        isDisabled: false
-      ) {
-        Task {
-          await viewModel.stopSession()
+    VStack(spacing: 12) {
+      // Recording duration indicator
+      if viewModel.isRecording {
+        HStack(spacing: 6) {
+          Circle()
+            .fill(Color.red)
+            .frame(width: 12, height: 12)
+          Text(viewModel.recordingDuration.formattedDuration)
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(.white)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.black.opacity(0.5))
+        .cornerRadius(16)
       }
 
-      // Timer button
-      CircleButton(
-        icon: "timer",
-        text: viewModel.activeTimeLimit != .noLimit ? viewModel.activeTimeLimit.displayText : nil
-      ) {
-        let nextTimeLimit = viewModel.activeTimeLimit.next
-        viewModel.setTimeLimit(nextTimeLimit)
-      }
+      // Controls row
+      HStack(spacing: 8) {
+        CustomButton(
+          title: "Stop streaming",
+          style: .destructive,
+          isDisabled: false
+        ) {
+          Task {
+            await viewModel.stopSession()
+          }
+        }
 
-      // Photo button
-      CircleButton(icon: "camera.fill", text: nil) {
-        viewModel.capturePhoto()
+        // Record button
+        CircleButton(
+          icon: viewModel.isRecording ? "stop.circle.fill" : "record.circle",
+          text: nil
+        ) {
+          if viewModel.isRecording {
+            Task {
+              await viewModel.stopRecording()
+            }
+          } else {
+            viewModel.startRecording()
+          }
+        }
+
+        // Timer button
+        CircleButton(
+          icon: "timer",
+          text: viewModel.activeTimeLimit != .noLimit ? viewModel.activeTimeLimit.displayText : nil
+        ) {
+          let nextTimeLimit = viewModel.activeTimeLimit.next
+          viewModel.setTimeLimit(nextTimeLimit)
+        }
+
+        // Photo button
+        CircleButton(icon: "camera.fill", text: nil) {
+          viewModel.capturePhoto()
+        }
       }
     }
   }
