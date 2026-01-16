@@ -3,14 +3,12 @@
 // Config.xcconfig is gitignored and should never be committed
 
 // API Backend Configuration
-API_BASE_URL = https:/$()/3c2173402993.ngrok-free.app
+API_BASE_URL = https:/$()/api.blindsighted.hails.info
 
 // LiveKit Server Configuration
-LIVEKIT_SERVER_URL = wss:/$()/your-livekit-server.com
-LIVEKIT_API_KEY = your_api_key_here
-LIVEKIT_API_SECRET = your_api_secret_here
+LIVEKIT_SERVER_URL = wss:/$()/blindsighted-iogq73td.livekit.cloud
 
 // Development Configuration (optional - for hardcoded token testing)
 // Leave empty to generate tokens dynamically via API
 LIVEKIT_DEV_TOKEN =
-LIVEKIT_DEV_ROOM_NAME = test-room
+LIVEKIT_DEV_ROOM_NAME =
