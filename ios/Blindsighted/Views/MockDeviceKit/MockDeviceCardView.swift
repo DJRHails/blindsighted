@@ -9,13 +9,14 @@
 
 #if DEBUG
 
+import PhotosUI
 import SwiftUI
 
 struct MockDeviceCardView: View {
   @ObservedObject var viewModel: ViewModel
   let onUnpairDevice: () -> Void
-  @State private var showingVideoPicker = false
-  @State private var showingImagePicker = false
+  @State private var selectedVideoItem: PhotosPickerItem?
+  @State private var selectedImageItem: PhotosPickerItem?
 
   var body: some View {
     CardView {
@@ -74,12 +75,29 @@ struct MockDeviceCardView: View {
           }
 
           HStack(spacing: 8) {
-            MockDeviceKitButton("Select video") {
-              showingVideoPicker = true
+            PhotosPicker(
+              selection: $selectedVideoItem,
+              matching: .videos
+            ) {
+              Text("Select video")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.blue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(8)
             }
-            .sheet(isPresented: $showingVideoPicker) {
-              MediaPickerView(mode: .video) { url, _ in
-                viewModel.selectVideo(from: url)
+            .onChange(of: selectedVideoItem) { _, newItem in
+              Task {
+                if let newItem,
+                   let data = try? await newItem.loadTransferable(type: Data.self) {
+                  let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(UUID().uuidString)
+                    .appendingPathExtension("mp4")
+                  try? data.write(to: tempURL)
+                  viewModel.selectVideo(from: tempURL)
+                }
               }
             }
 
@@ -88,16 +106,32 @@ struct MockDeviceCardView: View {
               activeText: "Has camera feed",
               inactiveText: "No camera feed"
             )
-
           }
 
           HStack(spacing: 8) {
-            MockDeviceKitButton("Select image") {
-              showingImagePicker = true
+            PhotosPicker(
+              selection: $selectedImageItem,
+              matching: .images
+            ) {
+              Text("Select image")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.blue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(8)
             }
-            .sheet(isPresented: $showingImagePicker) {
-              MediaPickerView(mode: .image) { url, _ in
-                viewModel.selectImage(from: url)
+            .onChange(of: selectedImageItem) { _, newItem in
+              Task {
+                if let newItem,
+                   let data = try? await newItem.loadTransferable(type: Data.self) {
+                  let tempURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent(UUID().uuidString)
+                    .appendingPathExtension("jpg")
+                  try? data.write(to: tempURL)
+                  viewModel.selectImage(from: tempURL)
+                }
               }
             }
 
@@ -112,6 +146,6 @@ struct MockDeviceCardView: View {
       .padding()
     }
   }
-}// Replace this with PhotosPicker once we're on iOS 16 or newer
+}
 
 #endif

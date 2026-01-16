@@ -98,8 +98,8 @@ class VideoRecorder {
       return
     }
 
-    // Convert VideoFrame to CVPixelBuffer
-    guard let pixelBuffer = videoFrame.makePixelBuffer() else {
+    // Convert VideoFrame to CVPixelBuffer with the configured video size
+    guard let pixelBuffer = videoFrame.makePixelBuffer(targetSize: videoSize) else {
       throw VideoRecorderError.frameAppendFailed
     }
 
@@ -143,22 +143,22 @@ class VideoRecorder {
 }
 
 extension VideoFrame {
-  /// Convert VideoFrame to CVPixelBuffer for video recording
-  func makePixelBuffer() -> CVPixelBuffer? {
+  /// Convert VideoFrame to CVPixelBuffer for video recording with specific size
+  func makePixelBuffer(targetSize: CGSize) -> CVPixelBuffer? {
     // Convert to UIImage first, then to CVPixelBuffer
     guard let uiImage = makeUIImage() else {
       return nil
     }
 
-    return uiImage.pixelBuffer()
+    return uiImage.pixelBuffer(targetSize: targetSize)
   }
 }
 
 extension UIImage {
-  /// Convert UIImage to CVPixelBuffer
-  func pixelBuffer() -> CVPixelBuffer? {
-    let width = Int(size.width)
-    let height = Int(size.height)
+  /// Convert UIImage to CVPixelBuffer with specific target size
+  func pixelBuffer(targetSize: CGSize) -> CVPixelBuffer? {
+    let width = Int(targetSize.width)
+    let height = Int(targetSize.height)
 
     let attributes: [String: Any] = [
       kCVPixelBufferCGImageCompatibilityKey as String: true,

@@ -50,6 +50,10 @@
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Needed to connect to Meta AI Glasses</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location data is used to add geotags to your recorded videos for lifelog tracking.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Access to your Ray-Ban Meta glasses microphone is needed to stream audio for AI assistance and remote viewing.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs access to save photos captured from your glasses.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -85,5 +89,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>APIConfig</key>
+	<dict>
+		<key>BaseURL</key>
+		<string>$(API_BASE_URL)</string>
+	</dict>
+	<key>LiveKitConfig</key>
+	<dict>
+		<key>ServerURL</key>
+		<string>$(LIVEKIT_SERVER_URL)</string>
+		<key>DevToken</key>
+		<string>$(LIVEKIT_DEV_TOKEN)</string>
+		<key>DevRoomName</key>
+		<string>$(LIVEKIT_DEV_ROOM_NAME)</string>
+	</dict>
 </dict>
 </plist>

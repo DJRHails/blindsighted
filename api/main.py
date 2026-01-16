@@ -1,22 +1,41 @@
 import base64
 from typing import Annotated
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
 from config import settings
 from clients.openrouter import OpenRouterClient
 from clients.elevenlabs import ElevenLabsClient
+from routers import sessions, preview, lifelog
 
-app = FastAPI(title="Blindsighted API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan manager."""
+    # Startup: database migrations are handled by Alembic
+    yield
+    # Shutdown: cleanup if needed
+
+
+app = FastAPI(title="Blindsighted API", lifespan=lifespan)
 
 # Configure CORS for Expo app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins + ["*"],
+    allow_origins=settings.cors_origins_list + ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(sessions.router)
+app.include_router(preview.router)
+app.include_router(lifelog.router)
 
 
 # Dependency injection for clients

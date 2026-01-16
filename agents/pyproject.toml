@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blindsighted-agents"
+version = "0.1.0"
+description = "LiveKit agents for Blindsighted vision assistance"
+requires-python = ">=3.11"
+dependencies = [
+    "livekit>=0.18.1",
+    "livekit-agents==0.12.3",
+    "livekit-plugins-openai==0.10.2",
+    "livekit-plugins-elevenlabs==0.8.3",
+    "livekit-plugins-silero==0.8.2",
+    "livekit-plugins-deepgram==0.8.5",
+    "loguru==0.7.3",
+    "python-dotenv==1.0.1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP"]
+ignore = ["E501"]

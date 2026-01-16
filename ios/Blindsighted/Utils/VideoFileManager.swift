@@ -5,11 +5,30 @@
 // Handles file naming, directory creation, and file list management.
 //
 
+import CoreLocation
 import Foundation
 import AVFoundation
 import UIKit
 
 let VIDEOS_DIRECTORY = "BlindsightedLifelog"
+
+struct VideoMetadata: Codable {
+  let latitude: Double?
+  let longitude: Double?
+  let altitude: Double?
+  let heading: Double?
+  let speed: Double?
+  let timestamp: Date
+
+  init(location: CLLocation?, heading: CLHeading?) {
+    self.latitude = location?.coordinate.latitude
+    self.longitude = location?.coordinate.longitude
+    self.altitude = location?.altitude
+    self.heading = heading?.trueHeading ?? location?.course
+    self.speed = location?.speed
+    self.timestamp = location?.timestamp ?? Date()
+  }
+}
 
 struct RecordedVideo: Identifiable, Codable {
   let id: UUID
@@ -17,13 +36,34 @@ struct RecordedVideo: Identifiable, Codable {
   let recordedAt: Date
   let duration: TimeInterval
   let fileSize: Int64
+  let metadata: VideoMetadata?
 
   var url: URL {
     VideoFileManager.shared.videoURL(for: filename)
   }
+
+  var hasLocation: Bool {
+    metadata?.latitude != nil && metadata?.longitude != nil
+  }
+
+  var locationDescription: String? {
+    guard let lat = metadata?.latitude, let lon = metadata?.longitude else {
+      return nil
+    }
+    return String(format: "%.4f°, %.4f°", lat, lon)
+  }
 }
 
-class VideoFileManager {
+// Protocol for dependency injection (allows preview mocking)
+protocol VideoFileManagerProtocol {
+  func listVideos() throws -> [RecordedVideo]
+  func videoURL(for filename: String) -> URL
+  func generateThumbnail(for video: RecordedVideo, at time: TimeInterval) async -> UIImage?
+  func totalStorageUsed() throws -> Int64
+  func deleteVideo(_ video: RecordedVideo) throws
+}
+
+class VideoFileManager: VideoFileManagerProtocol {
   static let shared = VideoFileManager()
 
   private let videosDirectory: URL
@@ -52,6 +92,31 @@ class VideoFileManager {
     return videosDirectory.appendingPathComponent(filename)
   }
 
+  /// Get metadata file URL for a video filename
+  private func metadataURL(for videoFilename: String) -> URL {
+    let metadataFilename = videoFilename.replacingOccurrences(of: ".mp4", with: ".json")
+    return videosDirectory.appendingPathComponent(metadataFilename)
+  }
+
+  /// Save metadata for a video
+  func saveMetadata(_ metadata: VideoMetadata, for videoFilename: String) throws {
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let data = try encoder.encode(metadata)
+    try data.write(to: metadataURL(for: videoFilename))
+  }
+
+  /// Load metadata for a video
+  func loadMetadata(for videoFilename: String) -> VideoMetadata? {
+    let url = metadataURL(for: videoFilename)
+    guard let data = try? Data(contentsOf: url) else {
+      return nil
+    }
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    return try? decoder.decode(VideoMetadata.self, from: data)
+  }
+
   /// List all recorded videos
   func listVideos() throws -> [RecordedVideo] {
     let fileURLs = try FileManager.default.contentsOfDirectory(
@@ -71,19 +136,26 @@ class VideoFileManager {
       let asset = AVURLAsset(url: url)
       let duration = asset.duration.seconds
 
+      // Load metadata if it exists
+      let metadata = loadMetadata(for: url.lastPathComponent)
+
       return RecordedVideo(
         id: UUID(),
         filename: url.lastPathComponent,
         recordedAt: creationDate,
         duration: duration,
-        fileSize: fileSize
+        fileSize: fileSize,
+        metadata: metadata
       )
     }.sorted { $0.recordedAt > $1.recordedAt }
   }
 
-  /// Delete a video file
+  /// Delete a video file and its metadata
   func deleteVideo(_ video: RecordedVideo) throws {
     try FileManager.default.removeItem(at: video.url)
+    // Also delete metadata if it exists
+    let metadataURL = metadataURL(for: video.filename)
+    try? FileManager.default.removeItem(at: metadataURL)
   }
 
   /// Get total size of all videos

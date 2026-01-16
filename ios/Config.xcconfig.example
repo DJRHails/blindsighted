@@ -1,0 +1,16 @@
+// Blindsighted App Configuration
+// Copy this file to Config.xcconfig and fill in your values
+// Config.xcconfig is gitignored and should never be committed
+
+// API Backend Configuration
+API_BASE_URL = http:/$()/localhost:8000
+
+// LiveKit Server Configuration
+LIVEKIT_SERVER_URL = wss:/$()/your-livekit-server.com
+LIVEKIT_API_KEY = your_api_key_here
+LIVEKIT_API_SECRET = your_api_secret_here
+
+// Development Configuration (optional - for hardcoded token testing)
+// Leave empty to generate tokens dynamically via API
+LIVEKIT_DEV_TOKEN =
+LIVEKIT_DEV_ROOM_NAME = test-room

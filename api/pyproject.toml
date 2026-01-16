@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "blindsighted-api"
 version = "0.1.0"
@@ -10,7 +14,14 @@ dependencies = [
     "httpx==0.28.1",
     "pydantic-settings==2.7.0",
     "pillow==11.1.0",
-    "elevenlabs==1.15.0",
+    "numpy==2.2.1",
+    "elevenlabs>=1.10.0",
+    "sqlalchemy[asyncio]==2.0.36",
+    "psycopg[binary]==3.2.3",
+    "alembic==1.14.0",
+    "livekit>=0.18.1",
+    "livekit-agents==0.12.3",
+    "loguru==0.7.3",
 ]
 
 [project.optional-dependencies]
@@ -36,6 +47,12 @@ select = [
 ignore = [
     "E501", # line too long (handled by formatter)
 ]
+
+[tool.setuptools]
+py-modules = ["main", "config", "database", "models"]
+
+[tool.setuptools.packages.find]
+include = ["clients*", "routers*", "services*"]
 
 [tool.mypy]
 python_version = "3.11"

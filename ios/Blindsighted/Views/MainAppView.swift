@@ -28,11 +28,21 @@ struct MainAppView: View {
           }
           .tag(0)
 
-        VideoGalleryView()
+        LifelogView()
           .tabItem {
-            Label("Gallery", systemImage: "square.grid.2x2")
+            Label("Lifelog", systemImage: "calendar")
           }
           .tag(1)
+
+        AudioTestView()
+          .tabItem {
+            Label("Audio", systemImage: "headphones")
+          }
+          .tag(2)
+      }
+      .task {
+        // Seed preview videos on first launch (DEBUG mode only)
+        await PreviewVideoSeeder.shared.seedVideosIfNeeded()
       }
     } else {
       // User not registered - show registration/onboarding flow

@@ -94,6 +94,47 @@ project.save
 
 **Important**: Always add new files to the Xcode project, or the build will fail with "file not found" errors.
 
+**iOS Configuration**:
+
+The iOS app uses Xcode configuration files (`.xcconfig`) for environment-specific settings like LiveKit credentials. This is similar to `.env` files but native to Xcode.
+
+**Setup**:
+
+1. Copy `ios/Config.xcconfig.example` to `ios/Config.xcconfig`:
+   ```bash
+   cd ios
+   cp Config.xcconfig.example Config.xcconfig
+   ```
+
+2. Edit `Config.xcconfig` with your credentials:
+   ```bash
+   # API Backend Configuration
+   API_BASE_URL = http:/$()/localhost:8000
+
+   # LiveKit Server Configuration
+   LIVEKIT_SERVER_URL = wss:/$()/your-livekit-server.com
+   LIVEKIT_API_KEY = your_api_key_here
+   LIVEKIT_API_SECRET = your_api_secret_here
+
+   # Development Configuration (for hardcoded token testing)
+   # For production, leave these empty to use API mode
+   LIVEKIT_DEV_TOKEN = eyJhbGc...your-dev-token
+   LIVEKIT_DEV_ROOM_NAME = test-room
+   ```
+
+3. Link the xcconfig file to your Xcode project:
+   - Open `Blindsighted.xcodeproj` in Xcode
+   - Select the project in Project Navigator
+   - Under "Info" tab → "Configurations" section
+   - For both Debug and Release, select `Config` for the Blindsighted target
+
+**Notes**:
+- `Config.xcconfig` is gitignored and should never be committed
+- The app reads these values from `Info.plist` at runtime via `LiveKitConfig.loadFromInfoPlist()`
+- **Development mode**: If `LIVEKIT_DEV_TOKEN` is set, the app uses manual mode with the hardcoded token (no API calls needed)
+- **Production mode**: If `LIVEKIT_DEV_TOKEN` is empty/unset, the app uses API mode and calls `/sessions/start` to get tokens dynamically
+- The app automatically switches between dev and prod modes based on whether a dev token is configured
+
 ### API (FastAPI/Python)
 
 ```bash

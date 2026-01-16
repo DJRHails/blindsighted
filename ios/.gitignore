@@ -1,1 +1,4 @@
 *.xcframework/
+
+# Local configuration (copy from Config.xcconfig.example)
+Config.xcconfig

@@ -12,3 +12,5 @@
 
 # uv
 .uv/
+# Agent environment variables
+agents/.env

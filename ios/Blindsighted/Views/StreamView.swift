@@ -24,9 +24,8 @@ struct StreamView: View {
         GeometryReader { geometry in
           Image(uiImage: videoFrame)
             .resizable()
-            .aspectRatio(contentMode: .fill)
+            .aspectRatio(contentMode: .fit)
             .frame(width: geometry.size.width, height: geometry.size.height)
-            .clipped()
         }
         .edgesIgnoringSafeArea(.all)
       } else {
@@ -42,13 +41,6 @@ struct StreamView: View {
         ControlsView(viewModel: viewModel)
       }
       .padding(.all, 24)
-    }
-    .onDisappear {
-      Task {
-        if viewModel.streamingStatus != .stopped {
-          await viewModel.stopSession()
-        }
-      }
     }
     // Show captured photos from DAT SDK in a preview sheet
     .sheet(isPresented: $viewModel.showPhotoPreview) {
@@ -67,8 +59,24 @@ struct ControlsView: View {
   @ObservedObject var viewModel: StreamSessionViewModel
   var body: some View {
     VStack(spacing: 12) {
-      // Recording duration indicator
-      if viewModel.isRecording {
+      // LiveKit connection indicator
+      if viewModel.isLiveKitConnected {
+        HStack(spacing: 6) {
+          Circle()
+            .fill(Color.green)
+            .frame(width: 12, height: 12)
+          Text("LIVE")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundColor(.white)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.black.opacity(0.5))
+        .cornerRadius(16)
+      }
+
+      // Recording duration indicator - always show when streaming
+      if viewModel.isStreaming {
         HStack(spacing: 6) {
           Circle()
             .fill(Color.red)
@@ -86,26 +94,12 @@ struct ControlsView: View {
       // Controls row
       HStack(spacing: 8) {
         CustomButton(
-          title: "Stop streaming",
+          title: "Stop recording",
           style: .destructive,
           isDisabled: false
         ) {
           Task {
             await viewModel.stopSession()
-          }
-        }
-
-        // Record button
-        CircleButton(
-          icon: viewModel.isRecording ? "stop.circle.fill" : "record.circle",
-          text: nil
-        ) {
-          if viewModel.isRecording {
-            Task {
-              await viewModel.stopRecording()
-            }
-          } else {
-            viewModel.startRecording()
           }
         }
 

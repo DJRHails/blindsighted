@@ -8,11 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		008FF0656A8DB01C0D4F302E /* AudioTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0F08BAC0F3290D10A14384 /* AudioTestView.swift */; };
+		02EB9E46A970C6200493D746 /* LiveKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0866ED6D8B295B34C2E33BA0 /* LiveKitManager.swift */; };
 		058F0D7CA24031D448196873 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86534376D936A121CECE61BE /* LocationManager.swift */; };
 		0734B8D86AB12A1CA1ADC84A /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D44CA48B3558E3BBC2F5925C /* AudioManager.swift */; };
+		0ADFF2BC65A91AA27F154CAC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB9AF0994BD6E62E7F77EB0 /* APIClient.swift */; };
 		2658C6B816296F40AF610C8C /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24CAA0CF5F78EFD5AA49AD32 /* LocationManager.swift */; };
+		36D904DCCAF867D40E5E3EEC /* AudioCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F5BDB9829320DD5FD1D86C5 /* AudioCaptureManager.swift */; };
 		3EF0E5D9F4F3939E0328E694 /* AudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97FBF1B9A4137446FC49EE27 /* AudioManager.swift */; };
 		4D7D8EA119AE050C9044FFB2 /* AudioTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0100FB0CC48442082755E922 /* AudioTestView.swift */; };
+		7361279827B5425615421C26 /* PreviewVideoFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */; };
+		7451E8B7CBAE1B46C1684F73 /* LiveKitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC2624254004236E8AAC8C71 /* LiveKitConfig.swift */; };
 		8F2D23802E856711002D0588 /* DebugMenuViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */; };
 		8F8F00782E8ACB4600A4BDAF /* WearablesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */; };
 		8FD96B7F2E6F0A9800F56AB1 /* BlindsightedApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD96B792E6F0A9800F56AB1 /* BlindsightedApp.swift */; };
@@ -33,17 +38,20 @@
 		8FFD60602E84A2F70035E446 /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605F2E84A2F70035E446 /* MainAppView.swift */; };
 		8FFD60612E84A2F70035E446 /* DebugMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */; };
 		9CDE2A402E6F101100B7F891 /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9CDE2A3F2E6F101100B7F891 /* LiveKit */; };
+		A7F63494631A1366EC67F4D4 /* LiveKitSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */; };
 		E3404C0C2F197F100060330D /* VideoFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0A2F197F100060330D /* VideoFileManager.swift */; };
 		E3404C0D2F197F100060330D /* VideoRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0B2F197F100060330D /* VideoRecorder.swift */; };
 		E3404C102F197F280060330D /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0F2F197F280060330D /* VideoPlayerView.swift */; };
-		E3404C112F197F280060330D /* VideoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0E2F197F280060330D /* VideoGalleryView.swift */; };
-		E3404C132F197F3C0060330D /* VideoGalleryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C122F197F3C0060330D /* VideoGalleryViewModel.swift */; };
+		E3404C112F197F280060330D /* LifelogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C0E2F197F280060330D /* LifelogView.swift */; };
+		E3404C132F197F3C0060330D /* LifelogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3404C122F197F3C0060330D /* LifelogViewModel.swift */; };
 		E66D30242E7DA71900470B48 /* MockDeviceKitButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E66D30232E7DA71900470B48 /* MockDeviceKitButton.swift */; };
 		E6A188482EB918740097D0E1 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6A188472EB918740097D0E1 /* StreamView.swift */; };
 		E6DA451D2E79A63100E3F688 /* MockDeviceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DA45182E79A63100E3F688 /* MockDeviceCardView.swift */; };
 		E6DA451E2E79A63100E3F688 /* CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DA45172E79A63100E3F688 /* CardView.swift */; };
 		E6DA451F2E79A63100E3F688 /* MockDeviceKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6DA451A2E79A63100E3F688 /* MockDeviceKitView.swift */; };
 		E6FD3BCE2EB4D53A00E7FE5D /* NonStreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */; };
+		F5CA9E6B4755AAE815951ACE /* LifelogDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFEB3EC3CB48EFDBA6D4593 /* LifelogDayView.swift */; };
+		F9B689D748BAF0A123792860 /* PreviewVideoSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E728DACFA5D93E9D63D4F96 /* PreviewVideoSeeder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,9 +79,14 @@
 
 /* Begin PBXFileReference section */
 		0100FB0CC48442082755E922 /* AudioTestView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioTestView.swift; sourceTree = "<group>"; };
+		0866ED6D8B295B34C2E33BA0 /* LiveKitManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitManager.swift; sourceTree = "<group>"; };
 		24CAA0CF5F78EFD5AA49AD32 /* LocationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		2A0F08BAC0F3290D10A14384 /* AudioTestView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioTestView.swift; sourceTree = "<group>"; };
 		3A3A3A3A3A3A3A3A3A3A3A3A /* Blindsighted.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blindsighted.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F5BDB9829320DD5FD1D86C5 /* AudioCaptureManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioCaptureManager.swift; sourceTree = "<group>"; };
+		4AFEB3EC3CB48EFDBA6D4593 /* LifelogDayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LifelogDayView.swift; sourceTree = "<group>"; };
+		4E728DACFA5D93E9D63D4F96 /* PreviewVideoSeeder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PreviewVideoSeeder.swift; sourceTree = "<group>"; };
+		6DB9AF0994BD6E62E7F77EB0 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		86534376D936A121CECE61BE /* LocationManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuViewModel.swift; sourceTree = "<group>"; };
 		8F8F00772E8ACB4500A4BDAF /* WearablesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearablesViewModel.swift; sourceTree = "<group>"; };
@@ -94,12 +107,14 @@
 		8FFD605E2E84A2F70035E446 /* DebugMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugMenuView.swift; sourceTree = "<group>"; };
 		8FFD605F2E84A2F70035E446 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
 		97FBF1B9A4137446FC49EE27 /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
+		AC2624254004236E8AAC8C71 /* LiveKitConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitConfig.swift; sourceTree = "<group>"; };
+		D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PreviewVideoFileManager.swift; sourceTree = "<group>"; };
 		D44CA48B3558E3BBC2F5925C /* AudioManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioManager.swift; sourceTree = "<group>"; };
 		E3404C0A2F197F100060330D /* VideoFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFileManager.swift; sourceTree = "<group>"; };
 		E3404C0B2F197F100060330D /* VideoRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoRecorder.swift; sourceTree = "<group>"; };
-		E3404C0E2F197F280060330D /* VideoGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoGalleryView.swift; sourceTree = "<group>"; };
+		E3404C0E2F197F280060330D /* LifelogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifelogView.swift; sourceTree = "<group>"; };
 		E3404C0F2F197F280060330D /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
-		E3404C122F197F3C0060330D /* VideoGalleryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoGalleryViewModel.swift; sourceTree = "<group>"; };
+		E3404C122F197F3C0060330D /* LifelogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifelogViewModel.swift; sourceTree = "<group>"; };
 		E66D30232E7DA71900470B48 /* MockDeviceKitButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitButton.swift; sourceTree = "<group>"; };
 		E699CC952E8150670052C240 /* BlindsightedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlindsightedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6A188472EB918740097D0E1 /* StreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamView.swift; sourceTree = "<group>"; };
@@ -107,6 +122,7 @@
 		E6DA45182E79A63100E3F688 /* MockDeviceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceCardView.swift; sourceTree = "<group>"; };
 		E6DA451A2E79A63100E3F688 /* MockDeviceKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDeviceKitView.swift; sourceTree = "<group>"; };
 		E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonStreamView.swift; sourceTree = "<group>"; };
+		FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveKitSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -167,7 +183,7 @@
 		8FD96B702E6F0A9800F56AB1 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				E3404C122F197F3C0060330D /* VideoGalleryViewModel.swift */,
+				E3404C122F197F3C0060330D /* LifelogViewModel.swift */,
 				8FFD602B2E8433E20035E446 /* MockDeviceKit */,
 				8F2D237F2E856711002D0588 /* DebugMenuViewModel.swift */,
 				8FD96B6F2E6F0A9800F56AB1 /* StreamSessionViewModel.swift */,
@@ -179,7 +195,7 @@
 		8FD96B762E6F0A9800F56AB1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				E3404C0E2F197F280060330D /* VideoGalleryView.swift */,
+				E3404C0E2F197F280060330D /* LifelogView.swift */,
 				E3404C0F2F197F280060330D /* VideoPlayerView.swift */,
 				8FFD5FF42E8422580035E446 /* Components */,
 				E6DA451B2E79A63100E3F688 /* MockDeviceKit */,
@@ -193,6 +209,8 @@
 				E6FD3BCD2EB4D53A00E7FE5D /* NonStreamView.swift */,
 				2A0F08BAC0F3290D10A14384 /* AudioTestView.swift */,
 				0100FB0CC48442082755E922 /* AudioTestView.swift */,
+				FCE29742DFA877E6A55FDE1B /* LiveKitSettingsView.swift */,
+				4AFEB3EC3CB48EFDBA6D4593 /* LifelogDayView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -231,6 +249,12 @@
 				D44CA48B3558E3BBC2F5925C /* AudioManager.swift */,
 				97FBF1B9A4137446FC49EE27 /* AudioManager.swift */,
 				24CAA0CF5F78EFD5AA49AD32 /* LocationManager.swift */,
+				AC2624254004236E8AAC8C71 /* LiveKitConfig.swift */,
+				0866ED6D8B295B34C2E33BA0 /* LiveKitManager.swift */,
+				3F5BDB9829320DD5FD1D86C5 /* AudioCaptureManager.swift */,
+				6DB9AF0994BD6E62E7F77EB0 /* APIClient.swift */,
+				D201422AD8220CEFF11C5BB8 /* PreviewVideoFileManager.swift */,
+				4E728DACFA5D93E9D63D4F96 /* PreviewVideoSeeder.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -365,7 +389,7 @@
 				8FFD60542E849D0D0035E446 /* RegistrationView.swift in Sources */,
 				8FFD60352E8434070035E446 /* StatusText.swift in Sources */,
 				8FFD602C2E8433E20035E446 /* MockDeviceKitViewModel.swift in Sources */,
-				E3404C132F197F3C0060330D /* VideoGalleryViewModel.swift in Sources */,
+				E3404C132F197F3C0060330D /* LifelogViewModel.swift in Sources */,
 				8FFD602D2E8433E20035E446 /* MockDeviceViewModel.swift in Sources */,
 				E6DA451D2E79A63100E3F688 /* MockDeviceCardView.swift in Sources */,
 				E6DA451E2E79A63100E3F688 /* CardView.swift in Sources */,
@@ -374,7 +398,7 @@
 				E6DA451F2E79A63100E3F688 /* MockDeviceKitView.swift in Sources */,
 				8FD96B872E6F0A9800F56AB1 /* StreamSessionViewModel.swift in Sources */,
 				E3404C102F197F280060330D /* VideoPlayerView.swift in Sources */,
-				E3404C112F197F280060330D /* VideoGalleryView.swift in Sources */,
+				E3404C112F197F280060330D /* LifelogView.swift in Sources */,
 				8FD96B882E6F0A9800F56AB1 /* StreamSessionView.swift in Sources */,
 				8FFD60602E84A2F70035E446 /* MainAppView.swift in Sources */,
 				8FFD60612E84A2F70035E446 /* DebugMenuView.swift in Sources */,
@@ -391,6 +415,14 @@
 				3EF0E5D9F4F3939E0328E694 /* AudioManager.swift in Sources */,
 				4D7D8EA119AE050C9044FFB2 /* AudioTestView.swift in Sources */,
 				2658C6B816296F40AF610C8C /* LocationManager.swift in Sources */,
+				7451E8B7CBAE1B46C1684F73 /* LiveKitConfig.swift in Sources */,
+				02EB9E46A970C6200493D746 /* LiveKitManager.swift in Sources */,
+				36D904DCCAF867D40E5E3EEC /* AudioCaptureManager.swift in Sources */,
+				A7F63494631A1366EC67F4D4 /* LiveKitSettingsView.swift in Sources */,
+				0ADFF2BC65A91AA27F154CAC /* APIClient.swift in Sources */,
+				7361279827B5425615421C26 /* PreviewVideoFileManager.swift in Sources */,
+				F5CA9E6B4755AAE815951ACE /* LifelogDayView.swift in Sources */,
+				F9B689D748BAF0A123792860 /* PreviewVideoSeeder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
