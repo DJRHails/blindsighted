@@ -1,13 +1,43 @@
 {
-    "permissions": {
-        "allow": [
-            "Bash(npm version:*)",
-            "mcp__playwriter__execute",
-            "Bash(git add:*)",
-            "Bash(git commit:*)",
-            "Bash(gh secret:*)",
-            "Bash(gh run rerun:*)",
-            "Bash(gh workflow run:*)"
-        ]
-    }
+  "permissions": {
+    "allow": [
+      "Bash(npm version:*)",
+      "mcp__playwriter__execute",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh secret:*)",
+      "Bash(gh run rerun:*)",
+      "Bash(gh workflow run:*)",
+      "WebSearch",
+      "Bash(plutil:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(pod install:*)",
+      "Bash(yarn install)",
+      "Bash(ls:*)",
+      "Bash(xargs:*)",
+      "Bash(npx expo-modules-autolinking:*)",
+      "Bash(pod spec:*)",
+      "Bash(rsync:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "Bash(git reset:*)",
+      "Bash(git push:*)",
+      "Bash(ruby -e:*)",
+      "Bash(ssh:*)",
+      "Bash(openssl rand:*)",
+      "Bash(uv pip install:*)",
+      "Bash(alembic init:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(.venv/bin/alembic revision:*)",
+      "Bash(.venv/bin/alembic upgrade:*)",
+      "Bash(alembic revision:*)",
+      "WebFetch(domain:docs.livekit.io)",
+      "WebFetch(domain:github.com)",
+      "Bash(tee:*)",
+      "Bash(chmod:*)",
+      "Bash(curl -s https://api.blindsighted.hails.info/health)"
+    ]
+  }
 }
