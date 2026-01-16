@@ -37,10 +37,17 @@ class LifelogViewModel: ObservableObject {
   @Published var totalStorage: String = "0 MB"
 
   private let fileManager: VideoFileManagerProtocol
+  private let syncManager = LifelogSyncManager.shared
   private let calendar = Calendar.current
 
   init(fileManager: VideoFileManagerProtocol = VideoFileManager.shared) {
     self.fileManager = fileManager
+    loadVideos()
+  }
+
+  func syncWithCloud() async {
+    isLoading = true
+    await syncManager.sync()
     loadVideos()
   }
 

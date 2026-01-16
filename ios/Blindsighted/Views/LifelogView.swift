@@ -54,6 +54,17 @@ struct LifelogView: View {
       .navigationTitle("Memories")
       .navigationBarTitleDisplayMode(.large)
       .toolbar {
+        ToolbarItem(placement: .navigationBarLeading) {
+          Button(action: {
+            Task {
+              await viewModel.syncWithCloud()
+            }
+          }) {
+            Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+          }
+          .disabled(viewModel.isLoading)
+        }
+
         ToolbarItem(placement: .navigationBarTrailing) {
           Menu {
             Text("Storage: \(viewModel.totalStorage)")
