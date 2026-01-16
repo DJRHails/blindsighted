@@ -127,7 +127,9 @@ class R2Client:
         )
 
         try:
-            async with httpx.AsyncClient() as client:
+            # Use longer timeout for large file uploads (5 minutes)
+            timeout = httpx.Timeout(300.0, connect=10.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.put(url, content=file_data, headers=headers)
                 response.raise_for_status()
 
@@ -164,7 +166,9 @@ class R2Client:
         )
 
         try:
-            async with httpx.AsyncClient() as client:
+            # Use reasonable timeout for delete operations
+            timeout = httpx.Timeout(30.0, connect=10.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.delete(url, headers=headers)
                 response.raise_for_status()
 

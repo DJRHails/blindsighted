@@ -3,19 +3,20 @@
 Provides endpoints for syncing lifelog video entries between devices and cloud storage.
 """
 
+import hashlib
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from clients.r2 import R2Client
 from database import get_db
-from models import User, LifelogEntry
-import hashlib
+from models import LifelogEntry, User
 
 router = APIRouter(prefix="/lifelog", tags=["lifelog"])
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/lifelog", tags=["lifelog"])
 class LifelogEntryResponse(BaseModel):
     """Response model for a lifelog entry."""
 
-    id: str
+    id: UUID
     filename: str
     video_hash: str
     r2_url: str
@@ -48,7 +49,7 @@ class SyncResponse(BaseModel):
 
     entries: list[LifelogEntryResponse]
     total_count: int
-    last_sync_at: datetime
+    last_sync_at: datetime | None
 
 
 class UploadResponse(BaseModel):
@@ -104,6 +105,8 @@ async def sync_lifelog(
     )
     entries = result.scalars().all()
 
+    logger.info(f"Found {len(entries)} entries for user {user.id}")
+
     # Update last sync time
     user.last_sync_at = datetime.now(UTC)
     await db.commit()
@@ -122,13 +125,14 @@ async def upload_video(
     filename: Annotated[str, Form()],
     recorded_at: Annotated[str, Form()],  # ISO8601 datetime string
     duration_seconds: Annotated[float, Form()],
-    db: Annotated[AsyncSession, Depends(get_db)],
-    r2_client: Annotated[R2Client, Depends(get_r2_client)],
     latitude: Annotated[float | None, Form()] = None,
     longitude: Annotated[float | None, Form()] = None,
     altitude: Annotated[float | None, Form()] = None,
     heading: Annotated[float | None, Form()] = None,
     speed: Annotated[float | None, Form()] = None,
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    r2_client: Annotated[R2Client, Depends(get_r2_client)],
 ) -> UploadResponse:
     """Upload a new lifelog video.
 
@@ -173,9 +177,7 @@ async def upload_video(
 
     # Upload to R2
     r2_key = f"lifelog/{user.id}/{video_hash[:8]}/{filename}"
-    r2_url = await r2_client.upload_file(
-        file_data=video_data, key=r2_key, content_type="video/mp4"
-    )
+    r2_url = await r2_client.upload_file(file_data=video_data, key=r2_key, content_type="video/mp4")
 
     # Parse recorded_at timestamp
     recorded_at_dt = datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
@@ -232,9 +234,7 @@ async def delete_entry(
 
     # Get entry
     result = await db.execute(
-        select(LifelogEntry).where(
-            LifelogEntry.id == entry_id, LifelogEntry.user_id == user.id
-        )
+        select(LifelogEntry).where(LifelogEntry.id == entry_id, LifelogEntry.user_id == user.id)
     )
     entry = result.scalar_one_or_none()
 
