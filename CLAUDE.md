@@ -9,9 +9,8 @@ Blindsighted is a mobile app with FastAPI backend that provides AI-powered visua
 **Architecture**: Monorepo with two main components:
 
 - `ios/` - Native iOS app (Swift/SwiftUI) using Meta Wearables DAT SDK for Ray-Ban Meta glasses
-- `api/` - FastAPI backend (Python 3.11) that processes frames using Gemini vision and ElevenLabs TTS
-
-**Flow**: Glasses capture photo → App sends base64 image to API → Gemini describes scene → ElevenLabs converts to speech → Audio played to user
+- `api/` - FastAPI backend (Python 3.11) that processes metadata + session management
+- `agents/` - LiveKit agents (Python 3.11) that process live video/audio streams and perform the ai processing.
 
 ## Development Commands
 
@@ -40,8 +39,6 @@ xcodebuild -project Blindsighted.xcodeproj \
   - `MWDATCamera` - Camera streaming and photo capture
   - Package URL: `https://github.com/facebook/meta-wearables-dat-ios`
   - Version: 0.3.0
-
-**Note**: The app is based on Meta's CameraAccess sample from the DAT SDK, customized for Blindsighted.
 
 **Adding New Files to Xcode Project**:
 
@@ -101,12 +98,14 @@ The iOS app uses Xcode configuration files (`.xcconfig`) for environment-specifi
 **Setup**:
 
 1. Copy `ios/Config.xcconfig.example` to `ios/Config.xcconfig`:
+
    ```bash
    cd ios
    cp Config.xcconfig.example Config.xcconfig
    ```
 
 2. Edit `Config.xcconfig` with your credentials:
+
    ```bash
    # API Backend Configuration
    API_BASE_URL = http:/$()/localhost:8000
@@ -129,6 +128,7 @@ The iOS app uses Xcode configuration files (`.xcconfig`) for environment-specifi
    - For both Debug and Release, select `Config` for the Blindsighted target
 
 **Notes**:
+
 - `Config.xcconfig` is gitignored and should never be committed
 - The app reads these values from `Info.plist` at runtime via `LiveKitConfig.loadFromInfoPlist()`
 - **Development mode**: If `LIVEKIT_DEV_TOKEN` is set, the app uses manual mode with the hardcoded token (no API calls needed)
@@ -141,10 +141,21 @@ The iOS app uses Xcode configuration files (`.xcconfig`) for environment-specifi
 cd api
 uv pip install -e ".[dev]"     # Install with dev dependencies
 uv pip install -e .            # Install production only
-uvicorn main:app --reload --host 0.0.0.0 --port 8000  # Run dev server
-ruff check --fix .             # Lint and auto-fix
-ruff format .                  # Format code
-mypy .                         # Type check
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000  # Run dev server
+uv run ruff check --fix .      # Lint and auto-fix
+uv run ruff format .           # Format code
+uv run ty .                    # Type check
+```
+
+**Database Migrations**: Use `uv run` to execute alembic commands:
+
+```bash
+cd api
+uv run alembic upgrade head    # Apply all migrations - DO NOT RUN. Let the user run this.
+uv run alembic revision --autogenerate -m "Description"  # Generate new migration
+uv run alembic downgrade -1    # Rollback one migration
+uv run alembic current         # Show current revision
+uv run alembic history         # Show migration history
 ```
 
 **Configuration**: Copy `api/.env.example` to `api/.env` and add:
@@ -212,7 +223,7 @@ iOS builds are performed using Xcode and can be distributed via:
 
 ### GitHub Actions Workflows
 
-- **PR Checks** (`.github/workflows/pr-checks.yml`): Lint/format (ruff), type check (mypy) for API
+- **PR Checks** (`.github/workflows/pr-checks.yml`): Lint/format (ruff), type check (ty) for API
 - **Release** (`.github/workflows/release.yml`): Triggered on `v*.*.*` tags
   - Builds Docker image for API and pushes to `ghcr.io/djrhails/blindsighted/api`
   - Creates GitHub release with changelog
@@ -295,6 +306,7 @@ git push origin v1.2.3
 The app fully supports both light and dark mode appearances. When working with UI:
 
 **Best Practices**:
+
 - **NEVER use hardcoded backgrounds**: Avoid `.background(Color.white)` or `.background(Color.black)` on views
 - **Use semantic colors**: Prefer `.foregroundColor(.secondary)` over `.foregroundColor(.gray)`
 - **System-adaptive colors**: SwiftUI's semantic colors automatically adapt to appearance:

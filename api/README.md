@@ -47,7 +47,7 @@ ruff format .
 
 Type check:
 ```bash
-mypy .
+ty .
 ```
 
 ## Running the API

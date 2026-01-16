@@ -3,7 +3,7 @@
 // Config.xcconfig is gitignored and should never be committed
 
 // API Backend Configuration
-API_BASE_URL = http:/$()/localhost:8000
+API_BASE_URL = https:/$()/3c2173402993.ngrok-free.app
 
 // LiveKit Server Configuration
 LIVEKIT_SERVER_URL = wss:/$()/your-livekit-server.com
