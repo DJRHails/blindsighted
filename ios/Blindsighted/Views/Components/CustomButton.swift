@@ -46,5 +46,7 @@ struct CustomButton: View {
     }
     .disabled(isDisabled)
     .opacity(isDisabled ? 0.6 : 1.0)
+    .accessibilityRemoveTraits(isDisabled ? .isButton : [])
+    .accessibilityAddTraits(isDisabled ? .isStaticText : [])
   }
 }

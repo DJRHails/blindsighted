@@ -9,7 +9,23 @@ import SwiftUI
 struct CircleButton: View {
   let icon: String
   let text: String?
+  let accessibilityLabel: String
+  let accessibilityHint: String?
   let action: () -> Void
+
+  init(
+    icon: String,
+    text: String? = nil,
+    accessibilityLabel: String,
+    accessibilityHint: String? = nil,
+    action: @escaping () -> Void
+  ) {
+    self.icon = icon
+    self.text = text
+    self.accessibilityLabel = accessibilityLabel
+    self.accessibilityHint = accessibilityHint
+    self.action = action
+  }
 
   var body: some View {
     Button(action: action) {
@@ -29,5 +45,7 @@ struct CircleButton: View {
     .frame(width: 56, height: 56)
     .background(.white)
     .clipShape(Circle())
+    .accessibilityLabel(accessibilityLabel)
+    .accessibilityHint(accessibilityHint ?? "")
   }
 }

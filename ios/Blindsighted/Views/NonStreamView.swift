@@ -32,6 +32,8 @@ struct NonStreamView: View {
               .foregroundColor(.white)
               .frame(width: 24, height: 24)
           }
+          .accessibilityLabel("Settings")
+          .accessibilityHint("Opens menu with device management options")
         }
 
         Spacer()
@@ -43,6 +45,7 @@ struct NonStreamView: View {
             .foregroundColor(.white)
             .aspectRatio(contentMode: .fit)
             .frame(width: 120)
+            .accessibilityHidden(true)
 
           Text("Record Your Glasses Camera")
             .font(.system(size: 20, weight: .semibold))
@@ -70,6 +73,7 @@ struct NonStreamView: View {
         }
         .padding(.bottom, 12)
         .opacity(viewModel.hasActiveDevice ? 0 : 1)
+        .accessibilityHidden(viewModel.hasActiveDevice)
 
         CustomButton(
           title: "Start recording",
@@ -80,6 +84,7 @@ struct NonStreamView: View {
             await viewModel.handleStartStreaming()
           }
         }
+        .accessibilityHint("Begins video recording from your glasses")
       }
       .padding(.all, 24)
     }
@@ -128,6 +133,7 @@ struct GettingStartedSheetView: View {
       ) {
         dismiss()
       }
+      .accessibilityHint("Dismisses getting started tips")
     }
     .padding(.all, 24)
     .background(
@@ -155,6 +161,7 @@ struct TipItemView: View {
         .frame(width: 24)
         .padding(.leading, 4)
         .padding(.top, 4)
+        .accessibilityHidden(true)
 
       Text(text)
         .font(.system(size: 15))
@@ -162,5 +169,6 @@ struct TipItemView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+    .accessibilityElement(children: .combine)
   }
 }

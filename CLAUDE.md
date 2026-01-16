@@ -381,6 +381,245 @@ VStack {
 .background(Color.white)
 ```
 
+### iOS Accessibility Guidelines
+
+**This app was originally designed for blind/visually impaired users. Accessibility is not optional—it's foundational.** Every UI element must be a joy to use with VoiceOver and other assistive technologies.
+
+#### Critical Requirements
+
+**1. Icon-Only Buttons Must Have Labels**
+
+ALL buttons with only icons must provide `accessibilityLabel` and `accessibilityHint`:
+
+```swift
+// ✅ Good - Clear labels for screen readers
+CircleButton(
+  icon: "camera.fill",
+  text: nil,
+  accessibilityLabel: "Capture photo",
+  accessibilityHint: "Takes a photo from your glasses camera"
+) {
+  capturePhoto()
+}
+
+// ❌ Bad - VoiceOver just says "Button"
+Button(action: { }) {
+  Image(systemName: "camera.fill")
+}
+```
+
+**2. Status Indicators Cannot Rely on Color Alone**
+
+Visual indicators (recording status, connection state) must be accessible:
+
+```swift
+// ✅ Good - Combines color with text and accessibility
+HStack(spacing: 6) {
+  Circle()
+    .fill(Color.red)
+    .frame(width: 12, height: 12)
+    .accessibilityHidden(true)  // Hide decorative circle
+  Text(recordingDuration)
+    .foregroundColor(.white)
+}
+.accessibilityElement(children: .combine)
+.accessibilityLabel("Recording")
+.accessibilityValue(recordingDuration)
+.accessibilityAddTraits(.updatesFrequently)
+
+// ❌ Bad - Only uses color
+Circle().fill(Color.red)
+```
+
+**3. Images Must Be Labeled or Hidden**
+
+- **Decorative images** (logos, icons): Use `.accessibilityHidden(true)`
+- **Informative images** (content): Provide descriptive `accessibilityLabel`
+
+```swift
+// ✅ Good - Decorative logo hidden
+Image(.appLogo)
+  .resizable()
+  .frame(width: 120)
+  .accessibilityHidden(true)
+
+// ✅ Good - Informative image labeled
+Image(uiImage: videoFrame)
+  .resizable()
+  .accessibilityLabel("Live video stream from glasses")
+  .accessibilityAddTraits(.isImage)
+
+// ❌ Bad - No accessibility consideration
+Image(.appLogo)
+  .resizable()
+```
+
+**4. Loading States Must Have Context**
+
+Progress indicators need descriptive labels:
+
+```swift
+// ✅ Good - Explains what's loading
+ProgressView()
+  .accessibilityLabel("Waiting for video stream")
+
+// ❌ Bad - No context
+ProgressView()
+```
+
+#### Best Practices
+
+**5. All Buttons Need Hints**
+
+Explain what happens when activated:
+
+```swift
+CustomButton(
+  title: "Start recording",
+  style: .primary,
+  isDisabled: !hasActiveDevice
+) {
+  handleStartStreaming()
+}
+.accessibilityHint("Begins video recording from your glasses")
+```
+
+**6. Disabled States Must Be Clear**
+
+```swift
+Button(action: { }) {
+  Text("Submit")
+}
+.disabled(isDisabled)
+.opacity(isDisabled ? 0.6 : 1.0)
+.accessibilityRemoveTraits(isDisabled ? .isButton : [])
+.accessibilityAddTraits(isDisabled ? .isStaticText : [])
+```
+
+**7. Conditional UI Must Update Accessibility**
+
+Elements that appear/disappear must be hidden from VoiceOver when not visible:
+
+```swift
+Text("Waiting for device")
+  .opacity(hasDevice ? 0 : 1)
+  .accessibilityHidden(hasDevice)  // Important!
+```
+
+**8. Group Related Elements**
+
+Combine related UI into semantic groups:
+
+```swift
+// ✅ Good - Groups tip icon and text
+HStack {
+  Image(icon)
+    .accessibilityHidden(true)
+  VStack {
+    Text(title)
+    Text(description)
+  }
+}
+.accessibilityElement(children: .combine)
+.accessibilityLabel("\(title). \(description)")
+
+// ✅ Good - Groups control buttons
+HStack {
+  Button("Stop") { }
+  Button("Photo") { }
+  Button("Mute") { }
+}
+.accessibilityElement(children: .contain)
+.accessibilityLabel("Recording controls")
+```
+
+**9. Dynamic Type Support**
+
+Use semantic font sizes that scale with user preferences:
+
+```swift
+// ✅ Good - Scales with Dynamic Type
+Text("Title")
+  .font(.headline)
+Text("Body")
+  .font(.body)
+
+// ⚠️ Acceptable with limits
+Text("Label")
+  .font(.system(size: 14))
+  .dynamicTypeSize(...min: .medium, max: .xxxLarge)
+
+// ❌ Bad - Fixed size doesn't scale
+Text("Title")
+  .font(.system(size: 20))
+```
+
+**10. Tab Navigation**
+
+Provide clear labels and hints for tabs:
+
+```swift
+TabView {
+  StreamView()
+    .tabItem { Label("Stream", systemImage: "video") }
+    .tag(0)
+    .accessibilityLabel("Video streaming tab")
+    .accessibilityHint("Record video from your glasses")
+}
+```
+
+#### Testing Checklist
+
+Before committing UI changes, test with:
+
+- [ ] **VoiceOver enabled** - Navigate through entire flow
+- [ ] **Dark Mode** - Check both light and dark appearances
+- [ ] **Large Text** - Test with largest Dynamic Type size
+- [ ] **Reduce Motion** - Verify animations respect user preference
+- [ ] **Color Blindness** - Don't rely on color alone for information
+
+#### Common Patterns
+
+**Menu Buttons:**
+```swift
+Menu {
+  Button("Delete") { }
+} label: {
+  Image(systemName: "ellipsis.circle")
+}
+.accessibilityLabel("Options menu")
+.accessibilityHint("Opens storage and deletion options")
+```
+
+**Toolbar Buttons:**
+```swift
+Button(action: syncData) {
+  Label("Sync", systemImage: "arrow.triangle.2.circlepath")
+}
+.accessibilityHint("Synchronizes your memories with cloud storage")
+```
+
+**Video Frames:**
+```swift
+Image(uiImage: currentFrame)
+  .resizable()
+  .accessibilityLabel("Live video stream from glasses")
+  .accessibilityAddTraits(.isImage)
+```
+
+#### What NOT to Do
+
+- ❌ Icon-only buttons without labels
+- ❌ Status indicators using only color
+- ❌ Hardcoded font sizes without Dynamic Type
+- ❌ Decorative images without `.accessibilityHidden(true)`
+- ❌ Loading states without context
+- ❌ Buttons without hints explaining their action
+- ❌ Conditional UI visible to VoiceOver when opacity = 0
+- ❌ Relying on visual layout for meaning
+
+**Remember:** If a blind user can't use it, it's broken. Accessibility is a core requirement, not a nice-to-have.
+
 ## Troubleshooting
 
 ### iOS Build Requirements

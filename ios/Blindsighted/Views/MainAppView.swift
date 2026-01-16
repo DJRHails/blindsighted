@@ -27,18 +27,24 @@ struct MainAppView: View {
             Label("Stream", systemImage: "video")
           }
           .tag(0)
+          .accessibilityLabel("Video streaming tab")
+          .accessibilityHint("Record video from your glasses")
 
         LifelogView()
           .tabItem {
             Label("Lifelog", systemImage: "calendar")
           }
           .tag(1)
+          .accessibilityLabel("Lifelog tab")
+          .accessibilityHint("Browse your recorded memories")
 
         AudioTestView()
           .tabItem {
             Label("Audio", systemImage: "headphones")
           }
           .tag(2)
+          .accessibilityLabel("Audio testing tab")
+          .accessibilityHint("Test audio routing to your glasses")
       }
       .task {
         // Sync lifelog with cloud on app launch

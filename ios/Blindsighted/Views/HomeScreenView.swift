@@ -13,7 +13,7 @@ struct HomeScreenView: View {
 
   var body: some View {
     ZStack {
-      Color.white.edgesIgnoringSafeArea(.all)
+      Color(UIColor.systemBackground).edgesIgnoringSafeArea(.all)
 
       VStack(spacing: 12) {
         Spacer()
@@ -22,6 +22,7 @@ struct HomeScreenView: View {
           .resizable()
           .aspectRatio(contentMode: .fit)
           .frame(width: 120)
+          .accessibilityHidden(true)
 
         VStack(spacing: 12) {
           HomeTipItemView(
@@ -58,6 +59,7 @@ struct HomeScreenView: View {
           ) {
             viewModel.connectGlasses()
           }
+          .accessibilityHint("Opens Meta AI app to authorize connection")
         }
       }
       .padding(.all, 24)
@@ -76,22 +78,25 @@ struct HomeTipItemView: View {
       Image(resource)
         .resizable()
         .renderingMode(.template)
-        .foregroundColor(.black)
+        .foregroundColor(.primary)
         .aspectRatio(contentMode: .fit)
         .frame(width: 24)
         .padding(.leading, 4)
         .padding(.top, 4)
+        .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: 6) {
         Text(title)
           .font(.system(size: 18, weight: .semibold))
-          .foregroundColor(.black)
+          .foregroundColor(.primary)
 
         Text(text)
           .font(.system(size: 15))
-          .foregroundColor(.gray)
+          .foregroundColor(.secondary)
       }
       Spacer()
     }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("\(title). \(text)")
   }
 }

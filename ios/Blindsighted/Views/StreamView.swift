@@ -26,12 +26,15 @@ struct StreamView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: geometry.size.width, height: geometry.size.height)
+            .accessibilityLabel("Live video stream from glasses")
+            .accessibilityAddTraits(.isImage)
         }
         .edgesIgnoringSafeArea(.all)
       } else {
         ProgressView()
           .scaleEffect(1.5)
           .foregroundColor(.white)
+          .accessibilityLabel("Waiting for video stream")
       }
 
       // Top-left: Recording indicator
@@ -42,6 +45,7 @@ struct StreamView: View {
               Circle()
                 .fill(Color.red)
                 .frame(width: 12, height: 12)
+                .accessibilityHidden(true)
               Text(viewModel.recordingDuration.formattedDuration)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white)
@@ -50,6 +54,10 @@ struct StreamView: View {
             .padding(.vertical, 6)
             .background(Color.black.opacity(0.5))
             .cornerRadius(16)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Recording")
+            .accessibilityValue(viewModel.recordingDuration.formattedDuration)
+            .accessibilityAddTraits(.updatesFrequently)
             Spacer()
           }
           Spacer()
@@ -66,6 +74,7 @@ struct StreamView: View {
               Circle()
                 .fill(Color.green)
                 .frame(width: 12, height: 12)
+                .accessibilityHidden(true)
               Text("LIVE")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.white)
@@ -74,6 +83,8 @@ struct StreamView: View {
             .padding(.vertical, 6)
             .background(Color.black.opacity(0.5))
             .cornerRadius(16)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("LiveKit connection status: Live")
           }
           Spacer()
         }
@@ -114,9 +125,15 @@ struct ControlsView: View {
           await viewModel.stopSession()
         }
       }
+      .accessibilityHint("Stops video recording and returns to home screen")
 
       // Photo button
-      CircleButton(icon: "camera.fill", text: nil) {
+      CircleButton(
+        icon: "camera.fill",
+        text: nil,
+        accessibilityLabel: "Capture photo",
+        accessibilityHint: "Takes a photo from your glasses camera"
+      ) {
         viewModel.capturePhoto()
       }
 
@@ -124,7 +141,9 @@ struct ControlsView: View {
       if viewModel.isLiveKitConnected {
         CircleButton(
           icon: viewModel.isMicrophoneMuted ? "mic.slash.fill" : "mic.fill",
-          text: nil
+          text: nil,
+          accessibilityLabel: viewModel.isMicrophoneMuted ? "Unmute microphone" : "Mute microphone",
+          accessibilityHint: viewModel.isMicrophoneMuted ? "Turns on your microphone" : "Turns off your microphone"
         ) {
           Task {
             await viewModel.toggleMicrophone()
@@ -132,5 +151,7 @@ struct ControlsView: View {
         }
       }
     }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Recording controls")
   }
 }

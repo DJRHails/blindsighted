@@ -63,6 +63,7 @@ struct LifelogView: View {
             Label("Sync", systemImage: "arrow.triangle.2.circlepath")
           }
           .disabled(viewModel.isLoading)
+          .accessibilityHint("Synchronizes your memories with cloud storage")
         }
 
         ToolbarItem(placement: .navigationBarTrailing) {
@@ -76,6 +77,8 @@ struct LifelogView: View {
           } label: {
             Image(systemName: "ellipsis.circle")
           }
+          .accessibilityLabel("Options menu")
+          .accessibilityHint("Opens storage and deletion options")
         }
       }
       .sheet(item: $selectedVideo) { video in
@@ -98,6 +101,7 @@ struct LifelogView: View {
         if viewModel.isLoading {
           ProgressView()
             .scaleEffect(1.5)
+            .accessibilityLabel("Loading memories")
         }
       }
     }
