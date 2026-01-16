@@ -32,6 +32,8 @@ Based on the [CameraAccess sample](https://github.com/facebook/meta-wearables-da
 - Xcode 26.2+ **IMPORTANT**
 - Swift 6.2+ **IMPORTANT**
 - An apple developer account
+- Xcode 26.2+ **IMPORTANT**
+- Swift 6.2+ **IMPORTANT**
 - iOS 17.0+
 - Meta Wearables Device Access Toolkit (included as a dependency)
 - A Meta AI glasses device for testing (optional for development)
