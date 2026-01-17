@@ -10,22 +10,15 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # LiveKit Agent Configuration
-    livekit_agent_name: str = "vision-agent"
-    livekit_url: str = ""
-    livekit_api_key: str = ""
-    livekit_api_secret: str = ""
+    # Google AI API (for Gemini)
+    google_api_key: str = ""
 
-    # OpenRouter API
-    openrouter_api_key: str = ""
-    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # API Backend URL
+    api_base_url: str = "http://localhost:8000"
 
-    # ElevenLabs API
+    # ElevenLabs Conversational AI (for reference)
     elevenlabs_api_key: str = ""
-    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice
-
-    # Deepgram API
-    deepgram_api_key: str = ""
+    elevenlabs_agent_id: str = "agent_0701kf5rm5s6f7jtnh7swk9nkx0a"
 
 
 settings = Settings()

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from clients.elevenlabs import ElevenLabsClient
 from clients.openrouter import OpenRouterClient
 from config import settings
-from routers import csv_files, lifelog, photos, preview, sessions
+from routers import csv_files, lifelog, photos, preview, user_choice
 
 
 @asynccontextmanager
@@ -34,7 +34,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(sessions.router)
+app.include_router(user_choice.router)
 app.include_router(preview.router)
 app.include_router(lifelog.router)
 app.include_router(photos.router)

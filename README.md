@@ -1,151 +1,170 @@
-# Blindsighted (Sample App)
+# Blindsighted
 
-**A hackathon-ready template for building AI-powered experiences with Ray-Ban Meta smart glasses.**
+**AI-powered shopping assistant for visually impaired users to select items from supermarket shelves.**
 
-Blindsighted is a **sample app** that connects Ray-Ban Meta smart glasses to AI agents via LiveKit. The context is for a visual assistance app for blind/visually impaired users, but the architecture works for any AI-powered glasses experience.
-
-The integration setup with Meta's wearables SDK and LiveKit streaming was finicky to get right. This template gives you a working foundation so you can skip that part and jump straight to the interesting bits.
+Blindsighted uses Gemini vision AI to analyze store shelves and ElevenLabs conversational AI to help users select and locate products through voice interaction.
 
 ## Architecture Overview
 
 ```
-iOS App (Swift) → LiveKit Cloud (WebRTC) → AI Agents (Python)
-     ↓                                           ↑
-     └──────→ FastAPI Backend (optional) ───────┘
-              (sessions, storage, etc.)
+iOS App (Camera) → Photos Directory → Gemini Agent → FastAPI Backend
+                                           ↓
+                              ElevenLabs Voice Agent ← User Voice
+                                           ↓
+                              Gemini Agent (Hand Guidance)
 ```
 
-**Three independent components:**
+**Three components:**
 
-- **`ios/`** - Native iOS app using Meta Wearables DAT SDK
-
-  - Streams video/audio from Ray-Ban Meta glasses to LiveKit
-  - Receives audio/data responses from agents
-  - Works standalone if you just want to test the glasses SDK
-
-- **`agents/`** - LiveKit agents (Python)
-
-  - Join LiveKit rooms as peers
-  - Process live video/audio streams with AI models
-  - Send responses back via audio/video/data channels
-  - **This is where the magic happens** - build your AI features here
+- **`agents/`** - Gemini-powered shelf assistant (Python)
+  - Watches for photos from the iOS app
+  - Guides camera positioning (LOW flag photos)
+  - Identifies products and generates CSV (HIGH flag photos)
+  - Guides user's hand to selected item
 
 - **`api/`** - FastAPI backend (Python)
-  - Session management and room creation
-  - R2 storage for life logs and replays
-  - Optional but useful for anything ad hoc you need a backend for
+  - Stores product CSV data
+  - Receives user choice from ElevenLabs
+  - Provides endpoints for the complete flow
 
-**You can work on just one part.** Want to build a cool agent but not touch iOS? Great. Want to experiment with the glasses SDK without running agents? Also fine. Want to add interesting storage/indexing features? The backend's there for you.
+- **`ios/`** - iOS app for Ray-Ban Meta glasses (Swift)
+  - Captures photos from smart glasses camera
+  - Saves photos with LOW/HIGH flags to Documents folder
+
+## User Flow
+
+1. **Camera Positioning** - User points glasses at shelf, Gemini guides them until full shelf is visible
+2. **Product Identification** - HIGH quality photo captured, Gemini lists all products as CSV
+3. **Voice Selection** - ElevenLabs agent reads products, user selects one via voice
+4. **Hand Guidance** - Gemini guides user's hand to the selected item using new LOW photos
 
 ## Quick Start
+
+### API Backend
+
+```bash
+cd api
+uv sync
+uv run alembic upgrade head  # Run database migrations
+uv run main.py               # Start API server on port 8000
+```
+
+API docs available at `http://localhost:8000/docs`
+
+### Gemini Agent
+
+```bash
+cd agents
+uv sync
+uv run shelf_assistant.py    # Start watching for photos
+```
+
+**Required environment variables** (in `agents/.env`):
+```
+GOOGLE_API_KEY=your_gemini_api_key
+API_BASE_URL=http://localhost:8000
+```
 
 ### iOS App
 
 ```bash
 cd ios
-open Blindsighted.xcodeproj
-# Build and run in Xcode (⌘R)
+open Blindsighted.xcodeproj  # Open in Xcode, build and run
 ```
 
-**Requirements**: Xcode 26.2+, iOS 17.0+, Swift 6.2+
+## API Endpoints
 
-See [ios/README.md](ios/README.md) for detailed setup.
+### ElevenLabs Integration
 
-### Agents
+**Store user's item selection:**
+```
+POST http://localhost:8000/user-choice
 
-```bash
-cd agents
-uv sync
-uv run example_agent.py dev
+Request Body:
+{
+    "item_name": "Coca Cola 330ml",
+    "item_location": "middle shelf, center"  // optional
+}
+
+Response:
+{
+    "message": "Choice recorded",
+    "id": "uuid-here"
+}
 ```
 
-**Test without hardware**: Use the [LiveKit Agents Playground](https://agents-playground.livekit.io/) to test agents with your webcam/microphone instead of glasses.
+**Get available products (CSV):**
+```
+GET http://localhost:8000/csv/get-summary
 
-See [agents/README.md](agents/README.md) for agent development.
+Response:
+{
+    "id": "uuid",
+    "filename": "shelf_items_20260117.csv",
+    "content": "item_number,product_name,brand,location,price\n1,Cola,Coca-Cola,top shelf,1.99\n...",
+    "file_size_bytes": 1234,
+    "created_at": "2026-01-17T12:00:00Z",
+    "updated_at": "2026-01-17T12:00:00Z"
+}
+```
 
-### API Backend (Optional)
+### Other Endpoints
 
+- `GET /user-choice/latest` - Get latest unprocessed user choice
+- `PATCH /user-choice/{id}/processed` - Mark choice as processed
+- `POST /csv/upload` - Upload CSV file (used by Gemini agent)
+
+## ElevenLabs Agent Setup
+
+1. Create a Conversational AI agent at [elevenlabs.io](https://elevenlabs.io)
+2. Agent ID: `agent_0701kf5rm5s6f7jtnh7swk9nkx0a`
+3. Configure the agent to:
+   - Call `GET /csv/get-summary` to read available products
+   - Parse CSV and present options to user via voice
+   - Call `POST /user-choice` with the user's selection
+
+## Photo Naming Convention
+
+Photos must include a flag in the filename:
+
+- `photo_2026-01-17T12-00-00_low.jpg` - Navigation/guidance mode
+- `photo_2026-01-17T12-00-00_high.jpg` - Product identification mode
+
+The Gemini agent watches `~/Documents/BlindsightedPhotos/` for new files.
+
+## Environment Variables
+
+### API (`api/.env`)
+```
+DATABASE_URL=postgresql://localhost/blindsighted
+GOOGLE_API_KEY=your_key
+ELEVENLABS_API_KEY=your_key
+```
+
+### Agents (`agents/.env`)
+```
+GOOGLE_API_KEY=your_gemini_api_key
+API_BASE_URL=http://localhost:8000
+ELEVENLABS_API_KEY=your_key
+ELEVENLABS_AGENT_ID=agent_0701kf5rm5s6f7jtnh7swk9nkx0a
+```
+
+## Development
+
+### Running Tests
 ```bash
 cd api
-uv sync
-uv run main.py
+uv run ruff check .  # Lint
+uv run ruff format . # Format
 ```
 
-API docs at `http://localhost:8000/docs`
-
-## What's Included
-
-### iOS App Features
-
-- Live video streaming from Ray-Ban Meta glasses
-- Audio routing to/from glasses (left/right channel testing)
-- Photo capture during streaming
-- Video recording and local storage
-- Video gallery with playback
-- LiveKit integration with WebRTC
-- Share videos/photos
-
-### Agent Template
-
-- LiveKit room auto-join based on session
-- Audio/video stream processing
-- AI model integration examples (vision, TTS)
-- Bidirectional communication (receive video, send audio)
-
-### Backend API
-
-- Session management endpoints
-- LiveKit room creation with tokens
-- R2 storage integration for life logs
-- FastAPI with dependency injection patterns
-
-## Use It Your Way
-
-**Feel free to:**
-
-- Rip out everything you don't need
-- Replace the AI models with your own
-- Change the entire agent architecture
-- Use a different backend (or no backend)
-- Build something completely different on top of the glasses SDK
-
-**This is over-engineered for a hackathon.** The three-component architecture exists because I found the initial setup painful and wanted to provide options. If you have a better approach or this feels too complicated, throw it away! The point is to give you working examples to learn from, not to force an architecture on you.
-
-## Environment Variables & API Keys
-
-The app needs a few API keys to work:
-
-- **LiveKit**: Server URL, API key, API secret (for WebRTC streaming)
-- **OpenRouter API Key** (optional, for AI models)
-- **ElevenLabs API Key** (optional, for TTS)
-
-**Having trouble getting something running?** Reach out and I'll unblock you.
-
-See `ios/Config.xcconfig.example` and `api/.env.example` for configuration details.
-
-## Documentation
-
-- **CLAUDE.md** - Full development guide with architecture details, code patterns, troubleshooting
-- **ios/README.md** - iOS-specific setup and configuration
-- **agents/README.md** - Agent development guide
-- **api/** - Backend API with OpenAPI docs at `/docs`
+### Database Migrations
+```bash
+cd api
+uv run alembic upgrade head     # Apply migrations
+uv run alembic revision --autogenerate -m "Description"  # Create migration
+```
 
 ## License
 
-**In short:** Keep it open source, it's fine to make money with it. I'd love to see what you build with it.
-
-**Exception**: The iOS app incorporates sample code from Meta's [meta-wearables-dat-ios](https://github.com/facebook/meta-wearables-dat-ios) repository, which has its own license terms. Check that repo for Meta's SDK license.
-
-## Why Does This Exist?
-
-I built this because:
-
-1. Getting Meta's wearables SDK working took a bit of time without being 'fun'.
-2. Originally I had custom WebRTC streaming (which took a lot of time); Pentaform showed me LiveKit which seems much more suitable for a hackathon use-case so I swapped over to that for this project, but also has it's own pain points.
-3. Unlikely typical hackathons which are one-and-done, it'd be great to have something people can iterate on.
-
-If this helps you build something cool, that's awesome. If you find a better way to do any of this, even better.
-
-## Contributing
-
-Found a bug? Have a better pattern? PRs welcome. This is meant to help people, so improvements that make it easier to use or understand are great.
+MIT License - See [LICENSE](LICENSE) for details.

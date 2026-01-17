@@ -18,10 +18,8 @@ class Settings(BaseSettings):
             return v.replace("postgresql://", "postgresql+psycopg://", 1)
         return v
 
-    # LiveKit
-    livekit_api_key: str = ""
-    livekit_api_secret: str = ""
-    livekit_url: str = "ws://localhost:7880"
+    # ElevenLabs Conversational AI
+    elevenlabs_agent_id: str = "agent_0701kf5rm5s6f7jtnh7swk9nkx0a"
 
     # OpenRouter API
     openrouter_api_key: str = ""

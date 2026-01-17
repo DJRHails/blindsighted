@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from uuid import UUID
 from uuid_utils.compat import uuid7
-from sqlalchemy import String, DateTime, Integer, Text, Float, ForeignKey
+from sqlalchemy import String, DateTime, Integer, Text, Float, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -189,4 +189,21 @@ class CSVFile(Base):
         nullable=False,
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
+    )
+
+
+class UserChoice(Base):
+    """Model for storing user's selected item from ElevenLabs voice call"""
+
+    __tablename__ = "user_choices"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
+    item_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    item_location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    csv_file_id: Mapped[UUID | None] = mapped_column(ForeignKey("csv_files.id"), nullable=True)
+    processed: Mapped[bool] = mapped_column(Boolean, default=False)  # Has Gemini acted on this?
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
