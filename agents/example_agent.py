@@ -2,23 +2,31 @@
 
 import asyncio
 import logging
+from collections.abc import AsyncGenerator, AsyncIterable
 
 from livekit import rtc
 from livekit.agents import (
     Agent,
     AgentServer,
     AgentSession,
+    FlushSentinel,
     JobContext,
     JobRequest,
+    ModelSettings,
     WorkerOptions,
     cli,
     get_job_context,
     llm,
+    tokenize,
+    tts,
 )
-from livekit.agents.metrics.base import TTSMetrics
+from livekit.agents.metrics.base import LLMMetrics, TTSMetrics
+from livekit.agents.types import TimedString
+from livekit.agents.utils import aio
 from livekit.agents.voice.events import ConversationItemAddedEvent, SpeechCreatedEvent
 from livekit.plugins import deepgram, elevenlabs, openai, silero
 from loguru import logger
+from typing_extensions import override
 
 from config import settings
 
@@ -77,6 +85,66 @@ class VisionAssistant(Agent):
             if track.kind == rtc.TrackKind.KIND_VIDEO:
                 logger.info(f"New video track subscribed from {participant.identity}")
                 self._create_video_stream(track)
+
+    @override
+    async def transcription_node(
+        self,
+        text: AsyncIterable[str | TimedString],
+        model_settings: ModelSettings,
+    ) -> AsyncGenerator[str | TimedString, None]:
+        """Transcription node for the vision assistant."""
+        async for chunk in text:
+            logger.debug(f"Transcription node received text: {chunk}")
+            yield chunk
+
+    @override
+    async def llm_node(
+        self,
+        chat_ctx: llm.ChatContext,
+        tools: list[llm.FunctionTool],
+        model_settings: ModelSettings,
+    ) -> AsyncGenerator[llm.ChatChunk | str | FlushSentinel, None]:
+        # Insert custom preprocessing here
+        async for chunk in Agent.default.llm_node(self, chat_ctx, tools, model_settings):
+            # Insert custom postprocessing here
+            logger.debug(f"LLM node received chunk: {chunk}")
+            yield chunk
+
+    @override
+    async def tts_node(
+        self,
+        text: AsyncIterable[str],
+        model_settings: ModelSettings,
+    ) -> AsyncGenerator[rtc.AudioFrame, None]:
+        """TTS node for the vision assistant."""
+        activity = self._get_activity_or_raise()
+        assert activity.tts is not None, "tts_node called but no TTS node is available"
+
+        wrapped_tts = activity.tts
+
+        if not activity.tts.capabilities.streaming:
+            wrapped_tts = tts.StreamAdapter(
+                tts=wrapped_tts,
+                sentence_tokenizer=tokenize.blingfire.SentenceTokenizer(retain_format=True),
+            )
+
+        conn_options = activity.session.conn_options.tts_conn_options
+        async with wrapped_tts.stream(conn_options=conn_options) as stream:
+
+            async def _forward_input() -> None:
+                async for chunk in text:
+                    logger.info(f"TTS node pushing text: '{chunk}'")
+                    stream.push_text(chunk)
+
+                stream.end_input()
+
+            forward_task = asyncio.create_task(_forward_input())
+            try:
+                async for ev in stream:
+                    logger.debug(f"TTS node sending '{ev}'")
+                    yield ev.frame
+            finally:
+                await aio.cancel_and_wait(forward_task)
 
     async def on_user_turn_completed(
         self, chat_ctx: llm.ChatContext, new_message: llm.ChatMessage
@@ -172,18 +240,22 @@ async def entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
 
     # Create Deepgram TTS instance
-    # tts_instance = deepgram.TTS(
-    #     api_key=settings.deepgram_api_key,
-    #     model="aura-asteria-en",
-    #     encoding="linear16",
-    #     sample_rate=24000,
-    # )
+    tts_instance = deepgram.TTS(
+        api_key=settings.deepgram_api_key,
+        model="aura-asteria-en",
+        encoding="linear16",
+        sample_rate=24000,
+    )
 
     tts_instance = elevenlabs.TTS(
         api_key=settings.elevenlabs_api_key,
         voice_id=settings.elevenlabs_voice_id,
         model="eleven_turbo_v2_5",
     )
+
+    def _on_tts_text_transform(text: str) -> str:
+        logger.info(f"TTS text transform: {text}")
+        return text
 
     # Configure the agent session with STT-LLM-TTS pipeline
     session = AgentSession(
@@ -225,6 +297,28 @@ async def entrypoint(ctx: JobContext) -> None:
         handle = event.speech_handle
         logger.info(f"Speech from {event.source} with handle #{handle.id}")
 
+    @session.on("agent_state_changed")
+    def _on_agent_state_changed(state) -> None:
+        logger.info(f"Agent state changed: {state} - {type(state)}")
+
+    @session.on("metrics_collected")
+    def _on_metrics_collected(metrics: LLMMetrics | TTSMetrics) -> None:
+        """Log metrics from LLM and TTS components."""
+        if isinstance(metrics, LLMMetrics):
+            logger.info(
+                f"LLM metrics: tokens={metrics.total_tokens} "
+                f"(prompt={metrics.prompt_tokens}, completion={metrics.completion_tokens}, "
+                f"cached={metrics.prompt_cached_tokens}), "
+                f"duration={metrics.duration:.2f}s, ttft={metrics.ttft:.2f}s, "
+                f"tokens/sec={metrics.tokens_per_second:.1f}"
+            )
+        elif isinstance(metrics, TTSMetrics):
+            logger.info(
+                f"TTS metrics: duration={metrics.duration:.2f}s, "
+                f"audio_duration={metrics.audio_duration:.2f}s, "
+                f"ttfb={metrics.ttfb:.2f}s, characters={metrics.characters_count}"
+            )
+
     @session.on("conversation_item_added")
     def _on_conversation_item(event: ConversationItemAddedEvent) -> None:
         # event.item is a ChatMessage object
@@ -232,10 +326,17 @@ async def entrypoint(ctx: JobContext) -> None:
         if not isinstance(item, llm.ChatMessage):
             logger.debug(f"Unknown conversation item added: {item}")
             return
-        content = item.content[0] if item.content else ""
+        # Use text_content to get the full text (not just first content item)
+        content = item.text_content or ""
         logger.info(
             f"Conversation item added: role={item.role}, content: '{content}', interrupted={item.interrupted}"
         )
+
+    if session.llm and isinstance(session.llm, llm.LLM):
+
+        @session.llm.on("metrics_collected")
+        def _on_session_llm_metrics(metrics: LLMMetrics) -> None:
+            logger.info(f"Session LLM metrics: {metrics}")
 
     # Add session TTS event listeners
     if session.tts:
@@ -250,7 +351,7 @@ async def entrypoint(ctx: JobContext) -> None:
             logger.info(f"Session TTS metrics: {metrics}")
 
     # Generate initial greeting
-    await session.generate_reply(instructions="Say 'blind-sighted connected'.")
+    await session.generate_reply(instructions="Say a 4 sentence description of what you can do.")
 
     logger.info("Vision agent session started successfully")
 
