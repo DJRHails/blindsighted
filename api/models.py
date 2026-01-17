@@ -168,3 +168,25 @@ class LifelogEntry(Base):
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="lifelog_entries")
+
+
+class CSVFile(Base):
+    """Model for storing CSV files in the database"""
+
+    __tablename__ = "csv_files"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_content: Mapped[str] = mapped_column(Text, nullable=False)  # Store CSV content as text
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
