@@ -19,7 +19,7 @@
             "Bash(grep:*)",
             "Bash(tree:*)",
             "Bash(git push:*)",
-            "Bash(ssh:*)", // Allowed for checking deployments
+            "Bash(ssh:*)",
             "Bash(openssl rand:*)",
             "Bash(uv pip install:*)",
             "Bash(alembic init:*)",
