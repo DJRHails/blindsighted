@@ -9,13 +9,14 @@ description = "LiveKit agents for Blindsighted vision assistance"
 requires-python = ">=3.11"
 dependencies = [
     "livekit==1.0.23",
-    "livekit-agents[openai,silero,deepgram,turn-detector,elevenlabs]~=1.0",
+    "livekit-agents[openai,silero,deepgram,turn-detector,elevenlabs,google]~=1.0",
     "loguru==0.7.3",
     "pydantic-settings==2.7.1",
+    "watchdog>=4.0.0",
 ]
 
 [tool.setuptools]
-py-modules = ["config", "example_agent"]
+py-modules = ["config", "example_agent", "test_gemini"]
 
 [tool.ruff]
 line-length = 100
