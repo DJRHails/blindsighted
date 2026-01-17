@@ -171,19 +171,18 @@ async def entrypoint(ctx: JobContext) -> None:
 
     await ctx.connect()
 
-    # Create Deepgram TTS instance
-    # tts_instance = deepgram.TTS(
-    #     api_key=settings.deepgram_api_key,
-    #     model="aura-asteria-en",
-    #     encoding="linear16",
-    #     sample_rate=24000,
-    # )
-
-    tts_instance = elevenlabs.TTS(
-        api_key=settings.elevenlabs_api_key,
-        voice_id=settings.elevenlabs_voice_id,
-        model="eleven_turbo_v2_5",
+    tts_instance = deepgram.TTS(
+        api_key=settings.deepgram_api_key,
+        model="aura-asteria-en",
+        encoding="linear16",
+        sample_rate=24000,
     )
+
+    # tts_instance = elevenlabs.TTS(
+    #     api_key=settings.elevenlabs_api_key,
+    #     voice_id=settings.elevenlabs_voice_id,
+    #     model="eleven_turbo_v2_5",
+    # )
 
     # tts_instance = elevenlabs.TTS(
     #     api_key=settings.elevenlabs_api_key,
