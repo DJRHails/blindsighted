@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from clients.elevenlabs import ElevenLabsClient
 from clients.openrouter import OpenRouterClient
 from config import settings
-from routers import lifelog, photos, preview, sessions
+from routers import csv_files, lifelog, photos, preview, sessions
 
 
 @asynccontextmanager
@@ -38,6 +38,7 @@ app.include_router(sessions.router)
 app.include_router(preview.router)
 app.include_router(lifelog.router)
 app.include_router(photos.router)
+app.include_router(csv_files.router)
 
 
 @app.get("/")
@@ -48,9 +49,27 @@ async def root() -> dict[str, str]:
 if __name__ == "__main__":
     import uvicorn
 
+    # SSL certificate paths for HTTPS
+    ssl_keyfile = os.getenv("SSL_KEYFILE", "localhost-key.pem")
+    ssl_certfile = os.getenv("SSL_CERTFILE", "localhost.pem")
+    
+    # Check if SSL certificates exist
+    has_ssl = os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile)
+    
+    if has_ssl:
+        print(f"HTTPS enabled with certificates: {ssl_certfile}, {ssl_keyfile}")
+    else:
+        print(f"Warning: SSL certificates not found. Running HTTP only.")
+        print(f"Expected files: {ssl_keyfile}, {ssl_certfile}")
+        print("Generate certificates using: openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes")
+
+    port = int(os.getenv("BLINDSIGHTED_API_PORT", 8000))
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=int(os.getenv("BLINDSIGHTED_API_PORT", 9999)),
+        port=port,
         reload=True,
+        ssl_keyfile=ssl_keyfile if has_ssl else None,
+        ssl_certfile=ssl_certfile if has_ssl else None,
     )
