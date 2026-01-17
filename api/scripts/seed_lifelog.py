@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from clients.r2 import R2Client
 from config import settings
-from models import User, LifelogEntry
+from models import File, User, LifelogEntry
 
 # Hardcoded metadata for preview videos
 VIDEO_METADATA: dict[str, dict[str, Any]] = {
@@ -223,38 +223,59 @@ async def seed_lifelog(device_identifier: str) -> None:
             filename = video_path.name
             print(f"\nProcessing {filename}...")
 
-            # Calculate video hash
-            video_hash = calculate_video_hash(video_path)
-            print(f"  Hash: {video_hash[:16]}...")
+            # Calculate content hash
+            content_hash = calculate_video_hash(video_path)
+            print(f"  Hash: {content_hash[:16]}...")
 
-            # Check if video already exists for this user
+            # Check if file already exists (globally)
+            result = await session.execute(select(File).where(File.content_hash == content_hash))
+            file = result.scalar_one_or_none()
+
+            # If file doesn't exist, create it
+            if not file:
+                # Read video file
+                with open(video_path, "rb") as f:
+                    video_data = f.read()
+
+                file_size = len(video_data)
+
+                # Get video duration
+                duration = get_video_duration(video_path)
+                print(f"  Duration: {duration:.2f}s, Size: {file_size / 1024 / 1024:.2f} MB")
+
+                # Upload video to object storage
+                storage_key = f"lifelog/{content_hash[:8]}/{filename}"
+                storage_url = await r2_client.upload_file(
+                    file_data=video_data, key=storage_key, content_type="video/mp4"
+                )
+                print(f"  ✓ Uploaded to storage: {storage_url}")
+
+                # Create file entry
+                file = File(
+                    content_hash=content_hash,
+                    content_type="video/mp4",
+                    storage_key=storage_key,
+                    storage_url=storage_url,
+                    file_size_bytes=file_size,
+                    duration_seconds=duration,
+                )
+                session.add(file)
+                await session.flush()
+                print(f"  ✓ Created file entry: {file.id}")
+            else:
+                print(f"  ✓ File already exists (ID: {file.id}), reusing")
+
+            # Check if this user already has a lifelog entry for this file
             result = await session.execute(
                 select(LifelogEntry).where(
-                    LifelogEntry.user_id == user.id, LifelogEntry.video_hash == video_hash
+                    LifelogEntry.user_id == user.id, LifelogEntry.file_id == file.id
                 )
             )
             existing_entry = result.scalar_one_or_none()
 
             if existing_entry:
-                print(f"  ⚠ Video already exists for this user (ID: {existing_entry.id}), skipping")
+                print(f"  ⚠ Lifelog entry already exists for this user (ID: {existing_entry.id}), skipping")
                 continue
-
-            # Read video file
-            with open(video_path, "rb") as f:
-                video_data = f.read()
-
-            file_size = len(video_data)
-
-            # Get video duration
-            duration = get_video_duration(video_path)
-            print(f"  Duration: {duration:.2f}s, Size: {file_size / 1024 / 1024:.2f} MB")
-
-            # Upload video to R2
-            r2_key = f"lifelog/{user.id}/{video_hash[:8]}/{filename}"
-            r2_url = await r2_client.upload_file(
-                file_data=video_data, key=r2_key, content_type="video/mp4"
-            )
-            print(f"  ✓ Uploaded to R2: {r2_url}")
 
             # Get metadata
             metadata = VIDEO_METADATA.get(filename, {})
@@ -277,13 +298,9 @@ async def seed_lifelog(device_identifier: str) -> None:
             # Create lifelog entry
             entry = LifelogEntry(
                 user_id=user.id,
+                file_id=file.id,
                 filename=filename,
-                video_hash=video_hash,
-                r2_key=r2_key,
-                r2_url=r2_url,
                 recorded_at=recorded_at,
-                duration_seconds=duration,
-                file_size_bytes=file_size,
                 latitude=metadata.get("latitude"),
                 longitude=metadata.get("longitude"),
                 altitude=0.0 if metadata else None,

@@ -125,31 +125,65 @@ class User(Base):
     )
 
 
+class File(Base):
+    """Model for content-addressed files stored in object storage
+
+    Files are globally unique by content_hash. Multiple lifelog entries
+    can reference the same file, enabling deduplication.
+    """
+
+    __tablename__ = "files"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
+
+    # Content addressing - globally unique
+    content_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True, index=True
+    )  # SHA256
+    content_type: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="video/mp4"
+    )  # MIME type
+
+    # Object storage
+    storage_key: Mapped[str] = mapped_column(String(512), nullable=False, unique=True)
+    storage_url: Mapped[str] = mapped_column(String(512), nullable=False)
+
+    # File metadata
+    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    duration_seconds: Mapped[float | None] = mapped_column(
+        Float, nullable=True
+    )  # Only for video/audio
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+
+    # Relationships
+    lifelog_entries: Mapped[list["LifelogEntry"]] = relationship(
+        back_populates="file", cascade="all, delete-orphan"
+    )
+
+
 class LifelogEntry(Base):
-    """Model for lifelog video entries synced from devices"""
+    """Model for lifelog video entries synced from devices
+
+    Represents a moment in time when a video was recorded.
+    References a File (which may be shared across multiple entries).
+    """
 
     __tablename__ = "lifelog_entries"
-    __table_args__ = (UniqueConstraint("user_id", "video_hash", name="uix_user_video_hash"),)
+    __table_args__ = (UniqueConstraint("user_id", "file_id", name="uix_user_file"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    file_id: Mapped[UUID] = mapped_column(ForeignKey("files.id"), nullable=False, index=True)
 
-    # File identification
+    # Entry metadata
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    video_hash: Mapped[str] = mapped_column(
-        String(64), nullable=False, index=True
-    )  # SHA256
-
-    # R2 storage
-    r2_key: Mapped[str] = mapped_column(String(512), nullable=False, unique=True)
-    r2_url: Mapped[str] = mapped_column(String(512), nullable=False)
-
-    # Video metadata
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    duration_seconds: Mapped[float] = mapped_column(Float, nullable=False)
-    file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # Location metadata (optional)
+    # Location metadata (optional - specific to this recording moment)
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     altitude: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -169,3 +203,4 @@ class LifelogEntry(Base):
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="lifelog_entries")
+    file: Mapped["File"] = relationship(back_populates="lifelog_entries")

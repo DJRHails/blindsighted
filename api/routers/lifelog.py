@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from clients.r2 import R2Client
 from database import get_db
-from models import LifelogEntry, User
+from models import File, LifelogEntry, User
 
 router = APIRouter(prefix="/lifelog", tags=["lifelog"])
 
@@ -97,22 +97,44 @@ async def sync_lifelog(
     # Get or create user
     user = await get_or_create_user(device_identifier, db)
 
-    # Get all entries for user
+    # Get all entries for user with file data
     result = await db.execute(
-        select(LifelogEntry)
+        select(LifelogEntry, File)
+        .join(File, LifelogEntry.file_id == File.id)
         .where(LifelogEntry.user_id == user.id)
         .order_by(LifelogEntry.recorded_at.desc())
     )
-    entries = result.scalars().all()
+    rows = result.all()
 
-    logger.info(f"Found {len(entries)} entries for user {user.id}")
+    logger.info(f"Found {len(rows)} entries for user {user.id}")
 
     # Update last sync time
     user.last_sync_at = datetime.now(UTC)
     await db.commit()
 
+    # Construct response with file data
+    entries = [
+        LifelogEntryResponse(
+            id=entry.id,
+            filename=entry.filename,
+            video_hash=file.content_hash,
+            r2_url=file.storage_url,
+            recorded_at=entry.recorded_at,
+            duration_seconds=file.duration_seconds or 0.0,
+            file_size_bytes=file.file_size_bytes,
+            latitude=entry.latitude,
+            longitude=entry.longitude,
+            altitude=entry.altitude,
+            heading=entry.heading,
+            speed=entry.speed,
+            created_at=entry.created_at,
+            updated_at=entry.updated_at,
+        )
+        for entry, file in rows
+    ]
+
     return SyncResponse(
-        entries=[LifelogEntryResponse.model_validate(entry) for entry in entries],
+        entries=entries,
         total_count=len(entries),
         last_sync_at=user.last_sync_at,
     )
@@ -160,24 +182,49 @@ async def upload_video(
     video_data = await video.read()
     file_size = len(video_data)
 
-    # Calculate video hash
-    video_hash = hashlib.sha256(video_data).hexdigest()
+    # Calculate content hash
+    content_hash = hashlib.sha256(video_data).hexdigest()
 
-    # Check if video already exists
-    result = await db.execute(select(LifelogEntry).where(LifelogEntry.video_hash == video_hash))
+    # Check if file already exists (globally)
+    result = await db.execute(select(File).where(File.content_hash == content_hash))
+    file = result.scalar_one_or_none()
+
+    # If file doesn't exist, create it
+    if not file:
+        # Upload to object storage
+        storage_key = f"lifelog/{content_hash[:8]}/{filename}"
+        storage_url = await r2_client.upload_file(
+            file_data=video_data, key=storage_key, content_type="video/mp4"
+        )
+
+        # Create file entry
+        file = File(
+            content_hash=content_hash,
+            content_type="video/mp4",
+            storage_key=storage_key,
+            storage_url=storage_url,
+            file_size_bytes=file_size,
+            duration_seconds=duration_seconds,
+        )
+        db.add(file)
+        await db.flush()  # Get file.id
+
+    # Check if this user already has a lifelog entry for this file
+    result = await db.execute(
+        select(LifelogEntry).where(
+            LifelogEntry.user_id == user.id, LifelogEntry.file_id == file.id
+        )
+    )
     existing_entry = result.scalar_one_or_none()
 
     if existing_entry:
+        await db.commit()
         return UploadResponse(
             id=str(existing_entry.id),
-            video_hash=existing_entry.video_hash,
-            r2_url=existing_entry.r2_url,
+            video_hash=file.content_hash,
+            r2_url=file.storage_url,
             already_exists=True,
         )
-
-    # Upload to R2
-    r2_key = f"lifelog/{user.id}/{video_hash[:8]}/{filename}"
-    r2_url = await r2_client.upload_file(file_data=video_data, key=r2_key, content_type="video/mp4")
 
     # Parse recorded_at timestamp
     recorded_at_dt = datetime.fromisoformat(recorded_at.replace("Z", "+00:00"))
@@ -185,13 +232,9 @@ async def upload_video(
     # Create lifelog entry
     entry = LifelogEntry(
         user_id=user.id,
+        file_id=file.id,
         filename=filename,
-        video_hash=video_hash,
-        r2_key=r2_key,
-        r2_url=r2_url,
         recorded_at=recorded_at_dt,
-        duration_seconds=duration_seconds,
-        file_size_bytes=file_size,
         latitude=latitude,
         longitude=longitude,
         altitude=altitude,
@@ -205,8 +248,8 @@ async def upload_video(
 
     return UploadResponse(
         id=str(entry.id),
-        video_hash=entry.video_hash,
-        r2_url=entry.r2_url,
+        video_hash=file.content_hash,
+        r2_url=file.r2_url,
         already_exists=False,
     )
 
@@ -232,24 +275,39 @@ async def delete_entry(
     # Get user
     user = await get_or_create_user(device_identifier, db)
 
-    # Get entry
+    # Get entry with file
     result = await db.execute(
-        select(LifelogEntry).where(LifelogEntry.id == entry_id, LifelogEntry.user_id == user.id)
+        select(LifelogEntry, File)
+        .join(File, LifelogEntry.file_id == File.id)
+        .where(LifelogEntry.id == entry_id, LifelogEntry.user_id == user.id)
     )
-    entry = result.scalar_one_or_none()
+    row = result.one_or_none()
 
-    if not entry:
+    if not row:
         raise HTTPException(status_code=404, detail="Entry not found")
 
-    # Delete from R2
-    try:
-        await r2_client.delete_file(entry.r2_key)
-    except Exception as e:
-        # Log error but continue with database deletion
-        print(f"Failed to delete from R2: {e}")
+    entry, file = row
 
-    # Delete from database
+    # Delete entry from database
     await db.delete(entry)
+    await db.flush()
+
+    # Check if any other lifelog entries reference this file
+    result = await db.execute(
+        select(LifelogEntry).where(LifelogEntry.file_id == file.id).limit(1)
+    )
+    other_entry = result.scalar_one_or_none()
+
+    # If no other entries reference this file, delete it from storage and database
+    if not other_entry:
+        try:
+            await r2_client.delete_file(file.storage_key)
+        except Exception as e:
+            # Log error but continue with database deletion
+            logger.warning(f"Failed to delete file from storage: {e}")
+
+        await db.delete(file)
+
     await db.commit()
 
     return {"message": "Entry deleted successfully"}
