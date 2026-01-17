@@ -17,7 +17,7 @@ from livekit.agents import (
 )
 from livekit.agents.metrics.base import TTSMetrics
 from livekit.agents.voice.events import ConversationItemAddedEvent, SpeechCreatedEvent
-from livekit.plugins import deepgram, elevenlabs, openai, silero
+from livekit.plugins import deepgram, openai, silero
 from loguru import logger
 
 from config import settings
@@ -146,7 +146,7 @@ async def should_accept_job(job_request: JobRequest) -> None:
         logger.warning(
             f"Room {job_request.room.name} has no metadata - accepting job for backward compatibility"
         )
-        await job_request.accept()
+        # await job_request.accept()
         return
 
     # Accept job if room metadata matches our agent name

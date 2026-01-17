@@ -304,7 +304,7 @@ class LifelogSyncManager: ObservableObject {
         }
 
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        // Note: UploadResponse uses custom CodingKeys to handle snake_case conversion
         let uploadResponse = try decoder.decode(UploadResponse.self, from: responseData)
 
         print("[Sync] Uploaded: \(video.filename) (hash: \(uploadResponse.videoHash))")

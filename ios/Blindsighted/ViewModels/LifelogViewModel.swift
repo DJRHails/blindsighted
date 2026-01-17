@@ -43,6 +43,19 @@ class LifelogViewModel: ObservableObject {
   init(fileManager: VideoFileManagerProtocol = VideoFileManager.shared) {
     self.fileManager = fileManager
     loadVideos()
+
+    // Listen for new video saves and auto-reload
+    NotificationCenter.default.addObserver(
+      forName: .videoDidSave,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.loadVideos()
+    }
+  }
+
+  deinit {
+    NotificationCenter.default.removeObserver(self)
   }
 
   func syncWithCloud() async {
@@ -209,4 +222,10 @@ class LifelogViewModel: ObservableObject {
     showError = false
     errorMessage = ""
   }
+}
+
+// MARK: - Notification Names
+
+extension NSNotification.Name {
+  static let videoDidSave = NSNotification.Name("videoDidSave")
 }

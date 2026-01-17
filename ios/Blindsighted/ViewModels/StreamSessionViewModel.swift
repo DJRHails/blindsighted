@@ -363,6 +363,9 @@ class StreamSessionViewModel: ObservableObject {
         NSLog("[Blindsighted] Metadata saved for: \(filename)")
       }
 
+      // Notify that a new video was saved so lifelog can refresh
+      NotificationCenter.default.post(name: .videoDidSave, object: nil)
+
       // Show success message
       showError = false
       errorMessage = "Video saved successfully"
