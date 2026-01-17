@@ -1,182 +1,125 @@
 # Julie
 
-**AI-powered shopping assistant for visually impaired users to select items from supermarket shelves.**
+**AI-powered shopping assistant for visually impaired users.**
 
-Julie uses Gemini vision AI to analyze store shelves and ElevenLabs conversational AI to help users select and locate products through voice interaction.
+## The Problem
 
-## Architecture Overview
+Grocery shopping is a significant challenge for blind and visually impaired individuals. Identifying products on shelves, reading labels,  and locating specific items typically requires assistance from others—limiting independence and privacy.
+
+## The Solution
+
+Julie combines **Ray-Ban Meta smart glasses** with **AI vision and voice** to give users complete autonomy when shopping, providing them with enough information to make qualitative, subjective choices about product selection. No screen interaction required—everything works through natural voice and audio feedback.
+
+## How It Works
+
+1. **Point** — User faces a shelf wearing the glasses
+2. **Scan** — Gemini [via Elevenlabs TTS] guides positioning until the full shelf is visible
+3. **Identification** — Gemini identifies all products
+4. **Discuss** — User has back and forth conversation with Elevenlabs Agent to determine item selection
+5. **Reach** — AI guides their hand directly to the product using real-time camera feedback
+
+The entire experience is **eyes-free**.
+
+## Key Features
+- **Voice-first interaction** — No buttons, no screens, just conversation
+- **Real-time guidance** — Continuous audio feedback using clock positions ("move to 2 o'clock")
+- **Product identification** — Recognizes items, brands, prices, and shelf locations
+- **Hand guidance** — Guides user's hand to the exact product location
+- **Works with existing hardware** — Ray-Ban Meta glasses + iPhone
+
+## System Architecture
 
 ```
-iOS App (Camera) → Photos Directory → Gemini Agent → FastAPI Backend
-                                           ↓
-                              ElevenLabs Voice Agent ← User Voice
-                                           ↓
-                              Gemini Agent (Hand Guidance)
+                         👓 RAY-BAN META GLASSES
+                                  │
+                                  │ photos
+                                  ▼
+                           ┌─────────────┐
+                           │   iOS App   │
+                           └──────┬──────┘
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
+          ▼                       ▼                       ▼
+   ┌─────────────┐        ┌─────────────┐        ┌─────────────┐
+   │ LOW photos  │        │ HIGH photo  │        │ LOW photos  │
+   │ (position)  │        │ (identify)  │        │ (guidance)  │
+   └──────┬──────┘        └──────┬──────┘        └──────┬──────┘
+          │                      │                      │
+          ▼                      ▼                      ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           GEMINI VISION AI                                   │
+│                                                                              │
+│  ① Navigation Mode      ② Identification Mode      ③ Hand Guidance Mode    │
+│  "Move camera right"    "Found 12 products"        "Move hand to 2 o'clock" │
+│         │                       │                           │               │
+│         ▼                       ▼                           ▼               │
+│   🔊 TTS Audio            CSV Product List            🔊 TTS Audio          │
+└─────────┬───────────────────────┬───────────────────────────┬────────────────┘
+          │                       │                           │
+          │                       ▼                           │
+          │     ┌─────────────────────────────────┐           │
+          │     │       FASTAPI BACKEND           │           │
+          │     │                                 │           │
+          │     │  POST /csv/upload ←── Gemini   │           │
+          │     │  GET /csv/get-summary ──→ 11L  │           │
+          │     │  POST /user-choice ←── 11L     │◄──────────┘
+          │     │  GET /user-choice/latest ──→ Gemini        │
+          │     │                                 │           │
+          │     └────────────────┬────────────────┘           │
+          │                      │                            │
+          │                      ▼                            │
+          │     ┌─────────────────────────────────┐           │
+          │     │  ELEVENLABS CONVERSATIONAL AI   │           │
+          │     │                                 │           │
+          │     │  🎤 User: "What's available?"   │           │
+          │     │  📋 Agent: Reads product list   │           │
+          │     │  🎤 User: "I want the Coca Cola"│           │
+          │     │  ✅ Agent: Posts choice to API ─┼───────────┘
+          │     │                                 │  triggers ③
+          │     └─────────────────────────────────┘
+          │
+          ▼
+    🔊 AUDIO OUTPUT (via glasses speakers)
 ```
 
-**Three components:**
+**Flow Summary:**
+1. **LOW photos** → Gemini guides camera positioning → Audio feedback
+2. **HIGH photo** → Gemini identifies products → CSV uploaded to API
+3. **ElevenLabs Agent** reads products, user selects via voice → Choice posted to API
+4. **LOW photos** → Gemini reads user choice from API → Hand guidance mode → Audio feedback
 
-- **`agents/`** - Gemini-powered shelf assistant (Python)
-  - Watches for photos from the iOS app
-  - Guides camera positioning (LOW flag photos)
-  - Identifies products and generates CSV (HIGH flag photos)
-  - Guides user's hand to selected item
-  - **Speaks responses via ElevenLabs TTS** (audio saved to `~/Documents/JulieAudio/`)
-
-- **`api/`** - FastAPI backend (Python)
-  - Stores product CSV data
-  - Receives user choice from ElevenLabs
-  - Provides endpoints for the complete flow
-
-- **`ios/`** - iOS app for Ray-Ban Meta glasses (Swift)
-  - Captures photos from smart glasses camera
-  - Saves photos with LOW/HIGH flags to Documents folder
-
-## User Flow
-
-1. **Camera Positioning** - User points glasses at shelf, Gemini guides them until full shelf is visible
-2. **Product Identification** - HIGH quality photo captured, Gemini lists all products as CSV
-3. **Voice Selection** - ElevenLabs agent reads products, user selects one via voice
-4. **Hand Guidance** - Gemini guides user's hand to the selected item using new LOW photos
+| Component | Purpose |
+|-----------|---------|
+| `ios/` | Captures photos from Ray-Ban Meta glasses |
+| `agents/` | Gemini AI for vision analysis + ElevenLabs TTS for audio output |
+| `api/` | Backend storing product data and user selections |
 
 ## Quick Start
 
-### API Backend
-
 ```bash
-cd api
-uv sync
-uv run alembic upgrade head  # Run database migrations
-uv run main.py               # Start API server on port 8000
+# API
+cd api && uv sync && uv run main.py
+
+# Agent
+cd agents && uv sync && uv run shelf_assistant.py
+
+# iOS
+cd ios && open Blindsighted.xcodeproj
 ```
 
-API docs available at `https://localhost:8000/docs`
+**Required API keys** (in `.env` files):
+- `GOOGLE_API_KEY` — Gemini vision AI
+- `ELEVENLABS_API_KEY` — Voice synthesis
 
-### Gemini Agent
+## Accessibility by Design
 
-```bash
-cd agents
-uv sync
-uv run shelf_assistant.py    # Start watching for photos
-```
-
-**Required environment variables** (in `agents/.env`):
-```
-GOOGLE_API_KEY=your_gemini_api_key
-API_BASE_URL=https://localhost:8000
-```
-
-### iOS App
-
-```bash
-cd ios
-open Blindsighted.xcodeproj  # Open in Xcode, build and run
-```
-
-## API Endpoints
-
-### ElevenLabs Integration
-
-**Store user's item selection:**
-```
-POST https://localhost:8000/user-choice
-
-Request Body:
-{
-    "item_name": "Coca Cola 330ml",
-    "item_location": "middle shelf, center"  // optional
-}
-
-Response:
-{
-    "message": "Choice recorded",
-    "id": "uuid-here"
-}
-```
-
-**Get available products (CSV):**
-```
-GET https://localhost:8000/csv/get-summary
-
-Response:
-{
-    "id": "uuid",
-    "filename": "shelf_items_20260117.csv",
-    "content": "item_number,product_name,brand,location,price\n1,Cola,Coca-Cola,top shelf,1.99\n...",
-    "file_size_bytes": 1234,
-    "created_at": "2026-01-17T12:00:00Z",
-    "updated_at": "2026-01-17T12:00:00Z"
-}
-```
-
-### Other Endpoints
-
-- `GET /user-choice/latest` - Get latest unprocessed user choice
-- `PATCH /user-choice/{id}/processed` - Mark choice as processed
-- `POST /csv/upload` - Upload CSV file (used by Gemini agent)
-
-## ElevenLabs Agent Setup
-
-1. Create a Conversational AI agent at [elevenlabs.io](https://elevenlabs.io)
-2. Agent ID: `agent_0701kf5rm5s6f7jtnh7swk9nkx0a`
-3. Configure the agent to:
-   - Call `GET /csv/get-summary` to read available products
-   - Parse CSV and present options to user via voice
-   - Call `POST /user-choice` with the user's selection
-
-## Photo Naming Convention
-
-Photos must include a flag in the filename:
-
-- `photo_2026-01-17T12-00-00_low.jpg` - Navigation/guidance mode
-- `photo_2026-01-17T12-00-00_high.jpg` - Product identification mode
-
-The Gemini agent watches `~/Documents/JuliePhotos/` for new files.
-
-## Environment Variables
-
-### API (`api/.env`)
-```
-DATABASE_URL=postgresql://localhost/julie
-GOOGLE_API_KEY=your_key
-ELEVENLABS_API_KEY=your_key
-```
-
-### Agents (`agents/.env`)
-```
-GOOGLE_API_KEY=your_gemini_api_key
-API_BASE_URL=https://localhost:8000
-ELEVENLABS_API_KEY=your_key
-ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM  # Rachel voice (optional)
-```
-
-## Audio Output (TTS)
-
-When `ELEVENLABS_API_KEY` is set, the Gemini agent converts all spoken guidance to audio:
-
-- **Audio files saved to:** `~/Documents/JulieAudio/`
-- **Format:** MP3
-- **Naming:** `{type}_{timestamp}.mp3` (e.g., `navigation_20260117_143022.mp3`)
-- **Auto-cleanup:** Files older than 5 minutes are automatically deleted
-
-The iOS app should watch this folder and play new audio files through the Meta Ray-Ban glasses.
-
-## Development
-
-### Running Tests
-```bash
-cd api
-uv run ruff check .  # Lint
-uv run ruff format . # Format
-```
-
-### Database Migrations
-```bash
-cd api
-uv run alembic upgrade head     # Apply migrations
-uv run alembic revision --autogenerate -m "Description"  # Create migration
-```
+- **No visual interface required** — All feedback is audio
+- **Natural language** — "I want the orange juice" not menu navigation
+- **Spatial audio cues** — Clock positions for intuitive direction
+- **Confirmation feedback** — "Got it!" when item is reached
+- **Error recovery** — Graceful re-prompting if something goes wrong
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
+MIT License — See [LICENSE](LICENSE)
