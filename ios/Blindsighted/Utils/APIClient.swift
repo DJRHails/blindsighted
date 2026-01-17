@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Request to start a streaming session
 struct StartSessionRequest: Codable {
@@ -51,6 +52,41 @@ struct StopSessionResponse: Codable {
 /// Error response from API
 struct APIErrorResponse: Codable {
     let detail: String
+}
+
+/// Request to analyze a photo
+struct PhotoAnalysisRequest: Codable {
+    let imageBase64: String
+    let flag: PhotoFlag
+
+    enum CodingKeys: String, CodingKey {
+        case imageBase64 = "image_base64"
+        case flag
+    }
+}
+
+/// Response from /photos/analyze endpoint
+struct PhotoAnalysisResponse: Codable {
+    let response: String
+    let flag: PhotoFlag
+}
+
+/// Errors specific to photo operations
+enum PhotoError: Error, LocalizedError {
+    case noFlag
+    case loadFailed
+    case encodingFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .noFlag:
+            return "Photo has no flag in filename"
+        case .loadFailed:
+            return "Failed to load image from disk"
+        case .encodingFailed:
+            return "Failed to encode image as JPEG"
+        }
+    }
 }
 
 /// Errors from API client
@@ -106,6 +142,44 @@ class APIClient: ObservableObject {
     func stopSession(sessionId: String) async throws -> StopSessionResponse {
         let request = StopSessionRequest(sessionId: sessionId)
         return try await post(endpoint: "/sessions/stop", body: request)
+    }
+
+    // MARK: - Photo Analysis
+
+    /// Analyze a photo using Gemini based on its flag
+    /// - Parameter photo: CapturedPhoto with flag in filename
+    /// - Returns: PhotoAnalysisResponse with Gemini's analysis
+    func analyzePhoto(_ photo: CapturedPhoto) async throws -> PhotoAnalysisResponse {
+        guard let flag = photo.flag else {
+            throw PhotoError.noFlag
+        }
+        guard let image = PhotoFileManager.shared.loadImage(for: photo) else {
+            throw PhotoError.loadFailed
+        }
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            throw PhotoError.encodingFailed
+        }
+
+        let base64 = data.base64EncodedString()
+        let request = PhotoAnalysisRequest(imageBase64: base64, flag: flag)
+
+        return try await post(endpoint: "/photos/analyze", body: request)
+    }
+
+    /// Analyze a photo directly from image and flag
+    /// - Parameters:
+    ///   - image: UIImage to analyze
+    ///   - flag: PhotoFlag indicating analysis type (low/high)
+    /// - Returns: PhotoAnalysisResponse with Gemini's analysis
+    func analyzePhoto(image: UIImage, flag: PhotoFlag) async throws -> PhotoAnalysisResponse {
+        guard let data = image.jpegData(compressionQuality: 0.8) else {
+            throw PhotoError.encodingFailed
+        }
+
+        let base64 = data.base64EncodedString()
+        let request = PhotoAnalysisRequest(imageBase64: base64, flag: flag)
+
+        return try await post(endpoint: "/photos/analyze", body: request)
     }
 
     // MARK: - HTTP Methods
