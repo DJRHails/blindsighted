@@ -21,6 +21,7 @@ iOS App (Camera) → Photos Directory → Gemini Agent → FastAPI Backend
   - Guides camera positioning (LOW flag photos)
   - Identifies products and generates CSV (HIGH flag photos)
   - Guides user's hand to selected item
+  - **Speaks responses via ElevenLabs TTS** (audio saved to `~/Documents/JulieAudio/`)
 
 - **`api/`** - FastAPI backend (Python)
   - Stores product CSV data
@@ -95,7 +96,7 @@ Response:
 
 **Get available products (CSV):**
 ```
-GET http://localhost:8000/csv/get-summary
+GET https://localhost:8000/csv/get-summary
 
 Response:
 {
@@ -146,8 +147,19 @@ ELEVENLABS_API_KEY=your_key
 GOOGLE_API_KEY=your_gemini_api_key
 API_BASE_URL=https://localhost:8000
 ELEVENLABS_API_KEY=your_key
-ELEVENLABS_AGENT_ID=agent_0701kf5rm5s6f7jtnh7swk9nkx0a
+ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM  # Rachel voice (optional)
 ```
+
+## Audio Output (TTS)
+
+When `ELEVENLABS_API_KEY` is set, the Gemini agent converts all spoken guidance to audio:
+
+- **Audio files saved to:** `~/Documents/JulieAudio/`
+- **Format:** MP3
+- **Naming:** `{type}_{timestamp}.mp3` (e.g., `navigation_20260117_143022.mp3`)
+- **Auto-cleanup:** Files older than 5 minutes are automatically deleted
+
+The iOS app should watch this folder and play new audio files through the Meta Ray-Ban glasses.
 
 ## Development
 

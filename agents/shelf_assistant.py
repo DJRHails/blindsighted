@@ -5,6 +5,8 @@ Processes photos from JuliePhotos directory and routes them based on filename fl
 - _low: Navigation mode - guide user positioning OR guide user's hand to selected item
 - _high: Identification mode - list all items as CSV and upload to API
 
+Audio responses are converted to speech via ElevenLabs and saved to JulieAudio folder.
+
 Flow:
 1. LOW photos guide camera positioning until view is good
 2. HIGH photo triggers item identification, generates CSV, uploads to API
@@ -14,7 +16,6 @@ Flow:
 """
 
 import asyncio
-import base64
 import os
 import time
 from datetime import datetime
@@ -36,6 +37,97 @@ else:
 
 # API base URL
 API_BASE_URL = os.getenv("API_BASE_URL", "https://localhost:8000")
+
+# ElevenLabs settings
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Rachel voice
+
+
+class ElevenLabsTTS:
+    """ElevenLabs text-to-speech client."""
+
+    def __init__(self, api_key: str = ELEVENLABS_API_KEY, voice_id: str = ELEVENLABS_VOICE_ID):
+        self.api_key = api_key
+        self.voice_id = voice_id
+        self.base_url = "https://api.elevenlabs.io/v1"
+
+    async def text_to_speech(self, text: str) -> bytes | None:
+        """Convert text to speech and return audio bytes."""
+        if not self.api_key:
+            print("[TTS] Warning: ELEVENLABS_API_KEY not set, skipping TTS")
+            return None
+
+        if not text or not text.strip():
+            return None
+
+        url = f"{self.base_url}/text-to-speech/{self.voice_id}"
+
+        headers = {
+            "xi-api-key": self.api_key,
+            "Content-Type": "application/json",
+        }
+
+        payload = {
+            "text": text,
+            "model_id": "eleven_turbo_v2_5",  # Fast model for real-time use
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75,
+            },
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(url, json=payload, headers=headers)
+                response.raise_for_status()
+                print(f"[TTS] Generated {len(response.content)} bytes of audio")
+                return response.content
+        except Exception as e:
+            print(f"[TTS] Error generating speech: {e}")
+            return None
+
+
+class AudioManager:
+    """Manages audio output files for the iOS app to play."""
+
+    def __init__(self):
+        self.directory_path = os.path.expanduser("~/Documents/JulieAudio")
+        print(f"[AudioManager] Output Path: {self.directory_path}")
+
+        # Create directory if it doesn't exist
+        Path(self.directory_path).mkdir(parents=True, exist_ok=True)
+
+    def save_audio(self, audio_bytes: bytes, prefix: str = "response") -> str | None:
+        """Save audio bytes to a file and return the path."""
+        if not audio_bytes:
+            return None
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        filename = f"{prefix}_{timestamp}.mp3"
+        filepath = os.path.join(self.directory_path, filename)
+
+        try:
+            with open(filepath, "wb") as f:
+                f.write(audio_bytes)
+            print(f"[AudioManager] Saved: {filename}")
+            return filepath
+        except Exception as e:
+            print(f"[AudioManager] Error saving audio: {e}")
+            return None
+
+    def cleanup_old_files(self, max_age_seconds: int = 300) -> None:
+        """Remove audio files older than max_age_seconds."""
+        try:
+            now = time.time()
+            for filename in os.listdir(self.directory_path):
+                filepath = os.path.join(self.directory_path, filename)
+                if os.path.isfile(filepath):
+                    file_age = now - os.path.getmtime(filepath)
+                    if file_age > max_age_seconds:
+                        os.remove(filepath)
+                        print(f"[AudioManager] Cleaned up: {filename}")
+        except Exception as e:
+            print(f"[AudioManager] Cleanup error: {e}")
 
 
 class LocalPhotoManager:
@@ -101,7 +193,7 @@ class APIClient:
         if filename is None:
             filename = f"shelf_items_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             files = {"file": (filename, csv_content.encode(), "text/csv")}
             response = await client.post(f"{self.base_url}/csv/upload", files=files)
             response.raise_for_status()
@@ -109,7 +201,7 @@ class APIClient:
 
     async def get_latest_user_choice(self) -> dict | None:
         """Get the latest unprocessed user choice."""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             response = await client.get(
                 f"{self.base_url}/user-choice/latest",
                 params={"unprocessed_only": True},
@@ -120,7 +212,7 @@ class APIClient:
 
     async def mark_choice_processed(self, choice_id: str) -> None:
         """Mark a user choice as processed."""
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             response = await client.patch(
                 f"{self.base_url}/user-choice/{choice_id}/processed"
             )
@@ -235,9 +327,12 @@ Example responses:
 class ShelfAssistant:
     """Main assistant that routes images and manages the shopping flow."""
 
-    def __init__(self):
+    def __init__(self, enable_tts: bool = True):
         self.photo_manager = LocalPhotoManager()
         self.api_client = APIClient()
+        self.audio_manager = AudioManager()
+        self.tts = ElevenLabsTTS() if enable_tts else None
+        self.enable_tts = enable_tts
 
         # Initialize agents
         self.navigation_agent = GeminiAgent("NAVIGATION", NAVIGATION_PROMPT)
@@ -247,6 +342,21 @@ class ShelfAssistant:
         self.processed_files: set[str] = set()
         self.current_user_choice: dict | None = None
         self.guidance_agent: GeminiAgent | None = None
+
+    async def speak(self, text: str, prefix: str = "response") -> str | None:
+        """Convert text to speech and save to audio folder."""
+        if not self.enable_tts or not self.tts:
+            return None
+
+        # Don't speak CSV data
+        if text.startswith("item_number,") or "," in text.split("\n")[0]:
+            print("[Assistant] Skipping TTS for CSV data")
+            return None
+
+        audio_bytes = await self.tts.text_to_speech(text)
+        if audio_bytes:
+            return self.audio_manager.save_audio(audio_bytes, prefix)
+        return None
 
     async def check_for_user_choice(self) -> None:
         """Check if there's a pending user choice for guidance mode."""
@@ -264,6 +374,10 @@ class ShelfAssistant:
                     item_location=choice.get("item_location", "unknown"),
                 )
                 self.guidance_agent = GeminiAgent("GUIDANCE", guidance_prompt)
+
+                # Announce the selection
+                announcement = f"Got it! Looking for {choice['item_name']}. Point your glasses at the shelf and I'll guide you."
+                await self.speak(announcement, "selection")
         except Exception as e:
             print(f"[Assistant] Error checking user choice: {e}")
 
@@ -319,8 +433,15 @@ class ShelfAssistant:
 
             result = await self.api_client.upload_csv(csv_content)
             print(f"[Assistant] CSV uploaded successfully: {result}")
+
+            # Count items and announce
+            item_count = len(csv_content.strip().split("\n")) - 1  # Minus header
+            announcement = f"I found {item_count} products on the shelf. The list has been sent to your phone."
+            await self.speak(announcement, "identification")
+
         except Exception as e:
             print(f"[Assistant] Failed to upload CSV: {e}")
+            await self.speak("Sorry, I had trouble identifying the products. Please try again.", "error")
 
         return response
 
@@ -337,6 +458,9 @@ class ShelfAssistant:
                 mime_type,
             )
             print(f"\n[GUIDANCE RESPONSE]\n{response}\n")
+
+            # Speak the guidance
+            await self.speak(response, "guidance")
 
             # Check if user got the item (simple heuristic)
             if any(phrase in response.lower() for phrase in ["got it", "right on it", "you have it", "perfect"]):
@@ -355,6 +479,9 @@ class ShelfAssistant:
                 mime_type,
             )
             print(f"\n[NAVIGATION RESPONSE]\n{response}\n")
+
+            # Speak the navigation guidance
+            await self.speak(response, "navigation")
 
         return response
 
@@ -404,6 +531,8 @@ async def watch_for_photos(assistant: ShelfAssistant) -> None:
         while True:
             # Periodically check for user choice updates
             await assistant.check_for_user_choice()
+            # Cleanup old audio files
+            assistant.audio_manager.cleanup_old_files()
             await asyncio.sleep(2)
     except asyncio.CancelledError:
         observer.stop()
@@ -432,13 +561,20 @@ async def main() -> None:
         print("Please set GOOGLE_API_KEY in your .env file.")
         return
 
-    assistant = ShelfAssistant()
+    # Check for ElevenLabs API key
+    enable_tts = bool(ELEVENLABS_API_KEY)
+    if not enable_tts:
+        print("Warning: ELEVENLABS_API_KEY not set. TTS disabled.")
+
+    assistant = ShelfAssistant(enable_tts=enable_tts)
 
     print("\n" + "=" * 60)
     print("Julie Shelf Assistant")
     print("=" * 60)
     print(f"Photos directory: {assistant.photo_manager.directory_path}")
+    print(f"Audio output: {assistant.audio_manager.directory_path}")
     print(f"API endpoint: {API_BASE_URL}")
+    print(f"TTS enabled: {enable_tts}")
     print("\nModes:")
     print("  - LOW flag: Camera positioning / Hand guidance")
     print("  - HIGH flag: Item identification (CSV output)")
