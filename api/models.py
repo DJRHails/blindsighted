@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from uuid import UUID
 from uuid_utils.compat import uuid7
-from sqlalchemy import String, DateTime, Integer, Text, Float, ForeignKey
+from sqlalchemy import String, DateTime, Integer, Text, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -129,6 +129,7 @@ class LifelogEntry(Base):
     """Model for lifelog video entries synced from devices"""
 
     __tablename__ = "lifelog_entries"
+    __table_args__ = (UniqueConstraint("user_id", "video_hash", name="uix_user_video_hash"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid7)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
@@ -136,7 +137,7 @@ class LifelogEntry(Base):
     # File identification
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     video_hash: Mapped[str] = mapped_column(
-        String(64), nullable=False, unique=True, index=True
+        String(64), nullable=False, index=True
     )  # SHA256
 
     # R2 storage

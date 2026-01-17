@@ -227,14 +227,16 @@ async def seed_lifelog(device_identifier: str) -> None:
             video_hash = calculate_video_hash(video_path)
             print(f"  Hash: {video_hash[:16]}...")
 
-            # Check if video already exists
+            # Check if video already exists for this user
             result = await session.execute(
-                select(LifelogEntry).where(LifelogEntry.video_hash == video_hash)
+                select(LifelogEntry).where(
+                    LifelogEntry.user_id == user.id, LifelogEntry.video_hash == video_hash
+                )
             )
             existing_entry = result.scalar_one_or_none()
 
             if existing_entry:
-                print(f"  ⚠ Video already exists (ID: {existing_entry.id}), skipping")
+                print(f"  ⚠ Video already exists for this user (ID: {existing_entry.id}), skipping")
                 continue
 
             # Read video file
