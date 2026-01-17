@@ -13,78 +13,107 @@ elif os.path.exists("agents/.env"):
 else:
     load_dotenv()
 
-async def test_gemini():
-    # Use direct Google API key
+class GeminiAgent:
+    def __init__(self, role_name, system_prompt, api_key):
+        self.role_name = role_name
+        self.model = google.LLM(
+            model="gemini-2.0-flash-exp",
+            api_key=api_key,
+        )
+        self.system_prompt = system_prompt
+
+    async def generate(self, user_content, image_data_url=None):
+        chat_ctx = llm.ChatContext()
+        chat_ctx.add_message(role="system", content=self.system_prompt)
+        
+        msg_content = [user_content]
+        if image_data_url:
+            msg_content.append(llm.ImageContent(image=image_data_url))
+            
+        chat_ctx.add_message(role="user", content=msg_content)
+
+        print(f"[{self.role_name}] Processing request...")
+        
+        try:
+            stream = self.model.chat(chat_ctx=chat_ctx)
+            full_response = ""
+            async for chunk in stream:
+                if chunk.delta and chunk.delta.content:
+                    full_response += chunk.delta.content
+            return full_response
+        except Exception as e:
+            return f"Error: {e}"
+
+async def test_gemini_agents():
     api_key = os.getenv("GOOGLE_API_KEY")
-    
     if not api_key:
-        print("Error: GOOGLE_API_KEY not found in environment.")
-        print("Please ensure agents/.env contains GOOGLE_API_KEY or export it.")
+        print("Error: GOOGLE_API_KEY not found.")
         return
 
-    # Initialize Gemini via Google plugin
-    # Using gemini-2.0-flash-exp for latest flash capabilities
-    model = google.LLM(
-        model="gemini-2.0-flash-exp",
-        api_key=api_key,
-    )
-
+    # Image Setup
     image_path = "/Users/shashankdurgad/Documents/GitHub/ef-accessibility-hack/Screenshot 2026-01-17 at 1.46.20 PM.png"
+    if not os.path.exists(image_path):
+        # Fallback to local file if available
+        image_path = "Screenshot 2026-01-17 at 1.46.20 PM.png"
     
     if not os.path.exists(image_path):
-        # Fallback if the script is run from inside agents/
-        image_path = "../Screenshot 2026-01-17 at 1.46.20 PM.png"
-        if not os.path.exists(image_path):
-            print(f"Error: Image not found at {image_path}")
-            return
+        print(f"Error: Image {image_path} not found.")
+        return
 
     with open(image_path, "rb") as f:
         image_bytes = f.read()
         image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        # Determine mime type from extension
         mime_type = "image/png" if image_path.endswith(".png") else "image/jpeg"
         image_data_url = f"data:{mime_type};base64,{image_b64}"
 
-    # System prompt for guidance
-    system_instructions = """You are a helpful AI assistant for visually impaired users. 
-You have access to their camera feed. Your goal is to guide them to collect the item they are looking for.
-
-Instructions:
-1. Provide EXACT physical guidance (e.g., 'Raise your hand', 'Move your hand 10cm left', 'The item is directly in front of you').
-2. If the item is only partially visible or off-center, give 'step-back' or 'pivot' instructions to reframe. If the item is still not visible, say that the required item is not visible in the current frame.
-3. If you see their hand, use it as a reference point (e.g., 'Your hand is just to the right of the tea').
-4. If the item is identified, validate it clearly (e.g., 'I see the Vahdam Assorted Teas box directly in front of you').
-5. Be concise and actionable.
-"""
-
-    chat_ctx = llm.ChatContext()
+    # --- AGENT 1: ITEM LISTER ---
+    lister_prompt = """You are an AI assistant for the visually impaired.
+    Your job is to scan the image and provide a numbered list of ALL distinct items visible.
+    - Be concise.
+    - format: 1. [Item Name] - [Brief Location]
+    - Do not give navigation instructions yet.
+    """
     
-    user_content = "I'm looking for the tea. Can you see it? Guide me to it."
-    chat_ctx.add_message(role="system", content=system_instructions)
-    chat_ctx.add_message(
-        role="user",
-        content=[
-            user_content,
-            llm.ImageContent(image=image_data_url)
-        ]
-    )
+    lister_agent = GeminiAgent("ITEM_LISTER", lister_prompt, api_key)
+    
+    print("\n--- Step 1: Listing Items ---")
+    items_list_response = await lister_agent.generate("List all items you see.", image_data_url)
+    print(items_list_response)
 
-    print(f"Testing Gemini with image: {os.path.basename(image_path)}")
-    print(f"User Request: {user_content}")
-    print("-" * 30)
+    # --- SIMULATE USER SELECTION ---
+    # In a real app, the user would select from the list. 
+    # Here typically we'd parse the list, but for the demo we'll assume they want "Tea" if present, or just the first item.
+    target_item = "box of Vahdam Teas"
+    print(f"\n[Simulated User Selection]: I want to find the '{target_item}'.")
 
-    try:
-        # Note: model.chat() returns an LLMStream, we need to iterate to get the final message
-        stream = model.chat(chat_ctx=chat_ctx)
-        content = ""
-        async for chunk in stream:
-            if chunk.delta and chunk.delta.content:
-                content += chunk.delta.content
-        
-        print("\nGemini Response:")
-        print(content)
-    except Exception as e:
-        print(f"Error calling Gemini: {e}")
+    # --- MOCK DATABASE LOOKUP ---
+    # Simulating fetching "stored photos" or metadata about this item
+    mock_db_context = f"""
+    [DATABASE INFO]
+    Item: {target_item}
+    Last Known Location: Kitchen Counter, near the coffee maker.
+    Appearance: Green box with floral patterns.
+    """
+
+    # --- AGENT 2: RETRIEVER / GUIDANCE ---
+    retriever_prompt = """You are a navigation assistant for the visually impaired.
+    You will receive:
+    1. A target item the user wants.
+    2. Optional database info about the item (appearance, last location).
+    3. The current live view (image).
+
+    Your Goal: Guide the user's hand to the item.
+    - Use "Clock Face" or "Centimeters/Inches" directions.
+    - Reference the database info if it helps confirm identity (e.g. "I see the green box you stored previously").
+    - If the hand is visible, guide relative to the hand.
+    """
+
+    retriever_agent = GeminiAgent("RETRIEVER", retriever_prompt, api_key)
+
+    print("\n--- Step 2: Retrieving/Guiding ---")
+    guidance_request = f"Help me find the {target_item}. Here is what I know about it: {mock_db_context}"
+    guidance_response = await retriever_agent.generate(guidance_request, image_data_url)
+    print(guidance_response)
 
 if __name__ == "__main__":
-    asyncio.run(test_gemini())
+    asyncio.run(test_gemini_agents())
