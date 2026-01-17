@@ -27,8 +27,11 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
-    # Gemini Model
+    # Gemini Model (via OpenRouter)
     gemini_model: str = "google/gemini-2.0-flash-exp:free"
+
+    # Google AI API (for direct Gemini calls)
+    google_api_key: str = ""
 
     # ElevenLabs API
     elevenlabs_api_key: str = ""

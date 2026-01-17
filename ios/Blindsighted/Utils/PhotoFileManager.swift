@@ -10,6 +10,12 @@ import UIKit
 
 let PHOTOS_DIRECTORY = "BlindsightedPhotos"
 
+/// Flag indicating the type of photo analysis needed
+enum PhotoFlag: String, Codable {
+  case low = "low"    // Navigation mode - guide user positioning
+  case high = "high"  // Identification mode - list shelf items
+}
+
 struct CapturedPhoto: Identifiable, Codable {
   let id: UUID
   let filename: String
@@ -18,6 +24,13 @@ struct CapturedPhoto: Identifiable, Codable {
 
   var url: URL {
     PhotoFileManager.shared.photoURL(for: filename)
+  }
+
+  /// Parse flag from filename (e.g., "photo_2026-01-17_low.jpg" -> .low)
+  var flag: PhotoFlag? {
+    if filename.contains("_low.") { return .low }
+    if filename.contains("_high.") { return .high }
+    return nil
   }
 }
 
@@ -44,15 +57,21 @@ class PhotoFileManager {
   }
 
   /// Save a photo and return its URL
+  /// - Parameters:
+  ///   - image: The UIImage to save
+  ///   - flag: Optional PhotoFlag to embed in filename (low/high)
+  ///   - quality: JPEG compression quality (0.0 to 1.0)
+  /// - Returns: URL of saved photo, or nil if save failed
   @discardableResult
-  func savePhoto(_ image: UIImage, quality: CGFloat = 0.8) -> URL? {
+  func savePhoto(_ image: UIImage, flag: PhotoFlag? = nil, quality: CGFloat = 0.8) -> URL? {
     guard let data = image.jpegData(compressionQuality: quality) else {
       return nil
     }
 
     let timestamp = ISO8601DateFormatter().string(from: Date())
       .replacingOccurrences(of: ":", with: "-")  // Remove colons for filename compatibility
-    let filename = "photo_\(timestamp).jpg"
+    let flagSuffix = flag.map { "_\($0.rawValue)" } ?? ""
+    let filename = "photo_\(timestamp)\(flagSuffix).jpg"
     let url = photosDirectory.appendingPathComponent(filename)
 
     do {
@@ -70,7 +89,9 @@ class PhotoFileManager {
   }
 
   /// List all captured photos
-  func listPhotos() throws -> [CapturedPhoto] {
+  /// - Parameter flag: Optional flag to filter by (nil returns all photos)
+  /// - Returns: Array of CapturedPhoto sorted by date (most recent first)
+  func listPhotos(withFlag flag: PhotoFlag? = nil) throws -> [CapturedPhoto] {
     let fileURLs = try FileManager.default.contentsOfDirectory(
       at: photosDirectory,
       includingPropertiesForKeys: [.creationDateKey, .fileSizeKey],
@@ -79,7 +100,7 @@ class PhotoFileManager {
 
     let jpgFiles = fileURLs.filter { $0.pathExtension.lowercased() == "jpg" }
 
-    return try jpgFiles.compactMap { url -> CapturedPhoto? in
+    let photos = try jpgFiles.compactMap { url -> CapturedPhoto? in
       let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
       let fileSize = attributes[.size] as? Int64 ?? 0
       let creationDate = attributes[.creationDate] as? Date ?? Date()
@@ -91,6 +112,12 @@ class PhotoFileManager {
         fileSize: fileSize
       )
     }.sorted { $0.capturedAt > $1.capturedAt }  // Most recent first
+
+    // Filter by flag if specified
+    if let flag = flag {
+      return photos.filter { $0.flag == flag }
+    }
+    return photos
   }
 
   /// Delete a single photo
