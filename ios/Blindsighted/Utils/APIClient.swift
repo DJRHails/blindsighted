@@ -45,7 +45,7 @@ struct StopSessionRequest: Codable {
 
 /// Response from /sessions/stop endpoint
 struct StopSessionResponse: Codable {
-    let status: String
+    let message: String
 }
 
 /// Error response from API

@@ -249,7 +249,7 @@ async def upload_video(
     return UploadResponse(
         id=str(entry.id),
         video_hash=file.content_hash,
-        r2_url=file.r2_url,
+        r2_url=file.storage_url,
         already_exists=False,
     )
 

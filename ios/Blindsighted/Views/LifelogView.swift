@@ -166,6 +166,7 @@ struct LifelogView: View {
             .font(.system(size: 14, weight: .bold))
             .foregroundColor(.white)
             .shadow(color: .black.opacity(0.7), radius: 3)
+            .allowsHitTesting(false)
 
           // Count badge in top-right corner if multiple videos
           if day.videos.count > 1 {
@@ -183,6 +184,7 @@ struct LifelogView: View {
               }
               Spacer()
             }
+            .allowsHitTesting(false)
           }
         }
         .frame(width: 48, height: 48 * 16 / 9)
