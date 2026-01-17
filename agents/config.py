@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
 
     # API Backend URL
-    api_base_url: str = "http://localhost:8000"
+    api_base_url: str = "https://localhost:8000"
 
     # ElevenLabs Conversational AI (for reference)
     elevenlabs_api_key: str = ""

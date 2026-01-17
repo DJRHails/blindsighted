@@ -1,7 +1,7 @@
 """
-Shelf Assistant - Gemini-powered vision assistant for visually impaired supermarket shopping.
+Julie Shelf Assistant - Gemini-powered vision assistant for visually impaired supermarket shopping.
 
-Processes photos from BlindsightedPhotos directory and routes them based on filename flags:
+Processes photos from JuliePhotos directory and routes them based on filename flags:
 - _low: Navigation mode - guide user positioning OR guide user's hand to selected item
 - _high: Identification mode - list all items as CSV and upload to API
 
@@ -35,17 +35,17 @@ else:
     load_dotenv()
 
 # API base URL
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://localhost:8000")
 
 
 class LocalPhotoManager:
     """
-    Manages photo files from ~/Documents/BlindsightedPhotos/.
+    Manages photo files from ~/Documents/JuliePhotos/.
     Mirrors the Swift PhotoFileManager functionality.
     """
 
     def __init__(self):
-        self.directory_path = os.path.expanduser("~/Documents/BlindsightedPhotos")
+        self.directory_path = os.path.expanduser("~/Documents/JuliePhotos")
         print(f"[LocalPhotoManager] Storage Path: {self.directory_path}")
 
         # Create directory if it doesn't exist
@@ -435,7 +435,7 @@ async def main() -> None:
     assistant = ShelfAssistant()
 
     print("\n" + "=" * 60)
-    print("Blindsighted Shelf Assistant")
+    print("Julie Shelf Assistant")
     print("=" * 60)
     print(f"Photos directory: {assistant.photo_manager.directory_path}")
     print(f"API endpoint: {API_BASE_URL}")

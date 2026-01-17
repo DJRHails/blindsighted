@@ -1,4 +1,4 @@
-"""Database models for Blindsighted"""
+"""Database models for Julie"""
 
 from datetime import UTC, datetime
 from enum import Enum

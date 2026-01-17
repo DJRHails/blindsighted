@@ -1,5 +1,5 @@
-"""LiveKit Agents for Blindsighted - Vision-based AI assistance."""
+"""Julie Agents - Gemini-powered vision assistance for supermarket shopping."""
 
-from agents.vision_agent import VisionAssistant, vision_agent, server
+from shelf_assistant import ShelfAssistant, LocalPhotoManager
 
-__all__ = ["VisionAssistant", "vision_agent", "server"]
+__all__ = ["ShelfAssistant", "LocalPhotoManager"]

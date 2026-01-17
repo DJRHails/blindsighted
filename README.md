@@ -1,8 +1,8 @@
-# Blindsighted
+# Julie
 
 **AI-powered shopping assistant for visually impaired users to select items from supermarket shelves.**
 
-Blindsighted uses Gemini vision AI to analyze store shelves and ElevenLabs conversational AI to help users select and locate products through voice interaction.
+Julie uses Gemini vision AI to analyze store shelves and ElevenLabs conversational AI to help users select and locate products through voice interaction.
 
 ## Architecture Overview
 
@@ -49,7 +49,7 @@ uv run alembic upgrade head  # Run database migrations
 uv run main.py               # Start API server on port 8000
 ```
 
-API docs available at `http://localhost:8000/docs`
+API docs available at `https://localhost:8000/docs`
 
 ### Gemini Agent
 
@@ -62,7 +62,7 @@ uv run shelf_assistant.py    # Start watching for photos
 **Required environment variables** (in `agents/.env`):
 ```
 GOOGLE_API_KEY=your_gemini_api_key
-API_BASE_URL=http://localhost:8000
+API_BASE_URL=https://localhost:8000
 ```
 
 ### iOS App
@@ -78,7 +78,7 @@ open Blindsighted.xcodeproj  # Open in Xcode, build and run
 
 **Store user's item selection:**
 ```
-POST http://localhost:8000/user-choice
+POST https://localhost:8000/user-choice
 
 Request Body:
 {
@@ -130,13 +130,13 @@ Photos must include a flag in the filename:
 - `photo_2026-01-17T12-00-00_low.jpg` - Navigation/guidance mode
 - `photo_2026-01-17T12-00-00_high.jpg` - Product identification mode
 
-The Gemini agent watches `~/Documents/BlindsightedPhotos/` for new files.
+The Gemini agent watches `~/Documents/JuliePhotos/` for new files.
 
 ## Environment Variables
 
 ### API (`api/.env`)
 ```
-DATABASE_URL=postgresql://localhost/blindsighted
+DATABASE_URL=postgresql://localhost/julie
 GOOGLE_API_KEY=your_key
 ELEVENLABS_API_KEY=your_key
 ```
@@ -144,7 +144,7 @@ ELEVENLABS_API_KEY=your_key
 ### Agents (`agents/.env`)
 ```
 GOOGLE_API_KEY=your_gemini_api_key
-API_BASE_URL=http://localhost:8000
+API_BASE_URL=https://localhost:8000
 ELEVENLABS_API_KEY=your_key
 ELEVENLABS_AGENT_ID=agent_0701kf5rm5s6f7jtnh7swk9nkx0a
 ```

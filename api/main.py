@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Shutdown: cleanup if needed
 
 
-app = FastAPI(title="Blindsighted API", lifespan=lifespan)
+app = FastAPI(title="Julie API", lifespan=lifespan)
 
 # Configure CORS for Expo app
 app.add_middleware(
@@ -43,7 +43,7 @@ app.include_router(csv_files.router)
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"message": "Welcome to Blindsighted API", "status": "healthy"}
+    return {"message": "Welcome to Julie API", "status": "healthy"}
 
 
 if __name__ == "__main__":
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         print(f"Expected files: {ssl_keyfile}, {ssl_certfile}")
         print("Generate certificates using: openssl req -x509 -newkey rsa:4096 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes")
 
-    port = int(os.getenv("BLINDSIGHTED_API_PORT", 8000))
+    port = int(os.getenv("JULIE_API_PORT", 8000))
     
     uvicorn.run(
         "main:app",

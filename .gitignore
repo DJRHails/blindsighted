@@ -10,10 +10,24 @@
 .env*
 !.env*.example
 
-# # Old expo
-# .expo/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
 
 # uv
 .uv/
-# Agent environment variables
-agents/.env
+
+# SSL certificates
+*.pem
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log

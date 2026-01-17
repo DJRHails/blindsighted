@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Database
-    database_url: str = "postgresql+psycopg://localhost/blindsighted"
+    database_url: str = "postgresql+psycopg://localhost/julie"
 
     @field_validator("database_url")
     @classmethod
@@ -39,8 +39,8 @@ class Settings(BaseSettings):
     cloudflare_account_id: str = "78a27224f8a5e611fbb1a5999e2a77eb"
     r2_access_key_id: str = ""
     r2_secret_access_key: str = ""
-    r2_bucket_name: str = "blindsighted"
-    r2_public_url: str = "https://cdn.blindsighted.hails.info"
+    r2_bucket_name: str = "julie"
+    r2_public_url: str = "https://cdn.julie.hails.info"
 
     # CORS
     cors_origins: str = "http://localhost:8081,exp://"
