@@ -43,6 +43,11 @@ class StreamSessionViewModel: ObservableObject {
   private var recordingMetadata: VideoMetadata?
   private let locationManager = LocationManager.shared
 
+  // Periodic photo capture properties
+  @Published var capturedPhotoCount: Int = 0
+  private var photoTimer: Timer?
+  private let photoCaptureInterval: TimeInterval = 1.0  // Capture every 1 second
+
   // LiveKit streaming properties
   @Published var isLiveKitConnected: Bool = false
   @Published var isMicrophoneMuted: Bool = false
@@ -342,6 +347,9 @@ class StreamSessionViewModel: ObservableObject {
       if let lat = metadata.latitude, let lon = metadata.longitude {
         NSLog("[Blindsighted] Location: \(lat), \(lon)")
       }
+
+      // Start periodic photo capture
+      startPeriodicPhotoCapture()
     } catch {
       showError("Failed to start recording: \(error.localizedDescription)")
     }
@@ -351,6 +359,9 @@ class StreamSessionViewModel: ObservableObject {
     guard isRecording, let recorder = videoRecorder else { return }
 
     isRecording = false
+
+    // Stop periodic photo capture
+    stopPeriodicPhotoCapture()
 
     do {
       let savedURL = try await recorder.stopRecording()
@@ -374,6 +385,45 @@ class StreamSessionViewModel: ObservableObject {
     recordingURL = nil
     recordingDuration = 0
     recordingMetadata = nil
+  }
+
+  // MARK: - Periodic Photo Capture
+
+  /// Start capturing photos every second during recording
+  private func startPeriodicPhotoCapture() {
+    capturedPhotoCount = 0
+
+    // Capture first photo immediately
+    captureAndSavePhoto()
+
+    // Schedule timer for subsequent photos
+    photoTimer = Timer.scheduledTimer(withTimeInterval: photoCaptureInterval, repeats: true) { [weak self] _ in
+      Task { @MainActor [weak self] in
+        self?.captureAndSavePhoto()
+      }
+    }
+
+    NSLog("[Blindsighted] Started periodic photo capture (every \(photoCaptureInterval)s)")
+  }
+
+  /// Stop periodic photo capture
+  private func stopPeriodicPhotoCapture() {
+    photoTimer?.invalidate()
+    photoTimer = nil
+    NSLog("[Blindsighted] Stopped periodic photo capture. Total photos: \(capturedPhotoCount)")
+  }
+
+  /// Capture current frame and save to photo storage
+  private func captureAndSavePhoto() {
+    guard let frame = currentVideoFrame else {
+      NSLog("[Blindsighted] No video frame available for photo capture")
+      return
+    }
+
+    if let url = PhotoFileManager.shared.savePhoto(frame) {
+      capturedPhotoCount += 1
+      NSLog("[Blindsighted] Captured photo #\(capturedPhotoCount): \(url.lastPathComponent)")
+    }
   }
 
   // MARK: - LiveKit Methods

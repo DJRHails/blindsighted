@@ -38,11 +38,19 @@ struct MainAppView: View {
           .accessibilityLabel("Lifelog tab")
           .accessibilityHint("Browse your recorded memories")
 
+        PhotoGalleryView()
+          .tabItem {
+            Label("Photos", systemImage: "photo.on.rectangle")
+          }
+          .tag(2)
+          .accessibilityLabel("Photos tab")
+          .accessibilityHint("Browse photos captured during recording")
+
         AudioTestView()
           .tabItem {
             Label("Audio", systemImage: "headphones")
           }
-          .tag(2)
+          .tag(3)
           .accessibilityLabel("Audio testing tab")
           .accessibilityHint("Test audio routing to your glasses")
       }
