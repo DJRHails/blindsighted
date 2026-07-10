@@ -1,4 +1,8 @@
-version: '3.8'
+# `name:` is REQUIRED: without it the compose project is named after the
+# directory (`api`), which collides with other repos deploying from an `api/`
+# dir on the shared host — their `up --remove-orphans` then removes this
+# container (this removed blindsighted-api on 2026-07-10).
+name: blindsighted-api
 
 services:
   api:
